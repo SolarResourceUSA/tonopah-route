@@ -1,0 +1,2228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Tonopah Permit Map – UPDATED – Solar Resource USA</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f1117; color: #f0f0f0;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    padding: 14px 16px 10px;
+    background: linear-gradient(135deg, #1a1f2e, #2d1a0d);
+    border-bottom: 1px solid #3a2a1e;
+  }
+  .logo { font-size: 11px; letter-spacing: 2px; color: #f59e0b; text-transform: uppercase; margin-bottom: 4px; }
+  .header h1 { font-size: 18px; font-weight: 700; color: #fff; }
+  .header .sub { font-size: 12px; color: #888; margin-top: 2px; }
+  .header .zone { font-size: 10px; color: #f59e0b; margin-top: 6px; background: #2d1a0d; padding: 3px 8px; border-radius: 6px; display: inline-block; }
+
+  /* ── Sync bar ── */
+  #sync-bar {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: #111827; border-bottom: 1px solid #1e293b;
+    padding: 6px 14px; font-size: 11px; color: #64748b;
+    min-height: 30px; transition: all 0.3s;
+  }
+  #sync-bar.saving  { background: #0a2540; color: #4fc3f7; }
+  #sync-bar.saved   { background: #0d2a0d; color: #66bb6a; }
+  #sync-bar.error   { background: #2a0f0f; color: #f87171; }
+
+  /* ── Stats bar ── */
+  .stats { display: flex; gap: 6px; padding: 8px; background: #0f1117; border-bottom: 1px solid #252d40; }
+  .stat {
+    flex: 1; background: #141926; border: 1px solid #252d40;
+    border-radius: 8px; padding: 6px; text-align: center;
+  }
+  .stat-num { font-size: 18px; font-weight: 800; color: #fff; }
+  .stat-num.green  { color: #66bb6a; }
+  .stat-num.orange { color: #ffa726; }
+  .stat-num.red    { color: #f87171; }
+  .stat-lbl { font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px; color: #666; margin-top: 1px; }
+
+  /* ── Filter chips ── */
+  .filters {
+    display: flex; gap: 6px; flex-wrap: wrap; padding: 8px;
+    background: #0f1117; border-bottom: 1px solid #252d40; overflow-x: auto;
+  }
+  .fchip {
+    background: #1e2438; color: #8b95b3; border: 1.5px solid #2a3040;
+    border-radius: 16px; padding: 5px 10px; font-size: 11px; font-weight: 600;
+    cursor: pointer; font-family: inherit; -webkit-appearance: none;
+    -webkit-tap-highlight-color: rgba(0,0,0,0); transition: all 0.15s; white-space: nowrap;
+  }
+  .fchip.active { background: #3a2a0d; color: #f59e0b; border-color: #5c4a1e; }
+  .fchip.active.newleads { background: #0d2e2e; color: #2dd4bf; border-color: #1a5c5c; }
+  .fchip.newleads { background: #1e2438; color: #2dd4bf; border-color: #1a4040; }
+
+
+  /* ── Map ── */
+  #map { width: 100%; height: calc(100vh - 240px); min-height: 400px; background: #e8eef2; }
+
+  /* Custom pin colors by status */
+  .pin {
+    width: 28px; height: 28px; border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg); border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pin-inner {
+    transform: rotate(45deg); color: #fff;
+    font-size: 12px; font-weight: 800;
+  }
+  .pin.bk-green  { background: #22c55e; }
+  .pin.bk-yellow { background: #f59e0b; }
+  .pin.bk-red    { background: #ef4444; }
+  .pin.bk-final  { background: #6b7280; }
+  .pin.bk-sold   { background: #3b82f6; }
+  .pin.bk-nih    { background: #a78bfa; }
+  .pin.bk-purple { background: #a855f7; box-shadow: 0 0 0 2px #fff, 0 0 8px #a855f7; }
+
+  /* ── Popup / detail sheet ── */
+  .leaflet-popup-content-wrapper {
+    background: #1a1f2e; color: #f0f0f0;
+    border: 1px solid #3a4556; border-radius: 12px;
+  }
+  .leaflet-popup-tip { background: #1a1f2e; border: 1px solid #3a4556; }
+  .leaflet-popup-content { margin: 10px; font-size: 12px; line-height: 1.5; }
+  .leaflet-popup-close-button { color: #888 !important; font-size: 18px !important; }
+
+  .detail {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #1a1f2e; border-top: 2px solid #f59e0b;
+    border-radius: 16px 16px 0 0;
+    padding: 14px 14px 20px; max-height: 60vh; overflow-y: auto;
+    transform: translateY(100%); transition: transform 0.25s;
+    z-index: 1000;
+  }
+  .detail.open { transform: translateY(0); }
+  .detail-close {
+    position: absolute; top: 10px; right: 12px;
+    background: none; border: none; color: #888;
+    font-size: 22px; cursor: pointer;
+  }
+  .detail-addr { font-size: 16px; font-weight: 700; color: #fff; padding-right: 30px; }
+  .detail-meta { font-size: 12px; color: #9aa3b8; margin-top: 4px; margin-bottom: 10px; }
+  .detail-row {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    font-size: 12px; padding: 5px 0; border-bottom: 1px solid #252d40;
+  }
+  .detail-row .k { color: #94a3b8; font-weight: 600; min-width: 100px; }
+  .detail-row .v { color: #e5e7eb; text-align: right; }
+  .detail-row .v.battery-yes { color: #66bb6a; font-weight: 700; }
+  .detail-row .v.battery-no  { color: #9ca3af; }
+
+  /* Notes textarea */
+  .notes-wrap { margin-top: 10px; }
+  .notes-wrap label { font-size: 10px; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.8px; }
+  .notes-wrap textarea {
+    width: 100%; min-height: 50px; margin-top: 4px;
+    background: #0d111c; color: #f0f0f0;
+    border: 1px solid #2a3040; border-radius: 8px;
+    padding: 8px; font-size: 13px; font-family: inherit; resize: vertical;
+  }
+
+  /* Outcome buttons */
+  .outcomes {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px;
+  }
+  .obtn {
+    background: #1e2438; color: #c4cde0; border: 1.5px solid #2a3040;
+    border-radius: 10px; padding: 8px 4px; font-size: 11px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+    -webkit-tap-highlight-color: rgba(0,0,0,0); transition: all 0.15s;
+  }
+  .obtn.active.apptset  { background: #0d3b0d; color: #66bb6a; border-color: #2e6e2e; }
+  .obtn.active.notint   { background: #3b0d0d; color: #f87171; border-color: #6e2e2e; }
+  .obtn.active.hassolar { background: #0d2a3b; color: #4fc3f7; border-color: #1e4d7a; }
+  .obtn.active.renter   { background: #3b250d; color: #ffa726; border-color: #6e4e2e; }
+  .obtn.active.nih      { background: #2a0d3b; color: #a78bfa; border-color: #4d2e7a; }
+  .obtn.active.called   { background: #3b280d; color: #fbbf24; border-color: #7a5a1e; }
+  .obtn.active.notmoved { background: #251a3b; color: #c4b5fd; border-color: #4a3a7a; }
+  .obtn.active.soldu    { background: #0d3b2a; color: #6ee7b7; border-color: #2e6e58; }
+
+  /* Update button */
+  .update-btn {
+    width: 100%; margin-top: 12px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff; border: none; border-radius: 10px;
+    padding: 12px; font-size: 14px; font-weight: 800;
+    cursor: pointer; font-family: inherit;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+  }
+  .update-btn:active { transform: scale(0.98); }
+  .update-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center; padding: 40px 20px;
+    color: #888; font-size: 13px; line-height: 1.6;
+  }
+  .empty-state h3 { color: #f59e0b; font-size: 16px; margin-bottom: 10px; }
+  .empty-state code {
+    background: #1e2438; padding: 2px 6px; border-radius: 4px;
+    font-size: 11px; color: #fbbf24;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">Solar Resource USA</div>
+  <h1>🏜 Tonopah AZ — Blake</h1>
+  <div class="sub">Maricopa County · Tonopah · Arlington · Buckeye · Wittmann · Morristown · APS</div>
+  <span class="zone">Map View · Permit Route</span>
+</div>
+
+<div id="sync-bar">⏳ Loading state from GitHub…</div>
+
+<div class="stats">
+  <div class="stat"><div id="stat-total" class="stat-num">0</div><div class="stat-lbl">Total</div></div>
+  <div class="stat"><div id="stat-active" class="stat-num green">0</div><div class="stat-lbl">Active</div></div>
+  <div class="stat"><div id="stat-knocked" class="stat-num orange">0</div><div class="stat-lbl">Knocked</div></div>
+  <div class="stat"><div id="stat-remaining" class="stat-num red">0</div><div class="stat-lbl">Left</div></div>
+</div>
+
+<div class="filters" id="filters">
+  <button class="fchip active" data-filter="all">All</button>
+  <button class="fchip" data-filter="unknocked">Unknocked</button>
+  <button class="fchip" data-filter="green">🟢 Issued</button>
+  <button class="fchip" data-filter="yellow">🟡 In‑progress</button>
+  <button class="fchip" data-filter="red">🔴 Hot lead</button>
+  <button class="fchip" data-filter="purple">🟣 Has kW</button>
+  <button class="fchip" data-filter="nih">NIH</button>
+  <button class="fchip" data-filter="called">Called</button>
+  <button class="fchip newleads" data-filter="newleads">🆕 New Leads</button>
+  <button class="fchip" data-filter="hidden">🚫 Hidden</button>
+</div>
+
+<div id="map"></div>
+
+<!-- Detail sheet -->
+<div class="detail" id="detail">
+  <button class="detail-close" onclick="closeDetail()">×</button>
+  <div id="d-leadname" style="font-size:19px;font-weight:800;color:#f8fafc;line-height:1.2;margin:2px 40px 2px 0;">—</div>
+  <div id="d-leadtags" style="margin:0 0 6px 0;font-size:10px;"></div>
+  <div class="detail-addr" id="d-addr">—</div>
+  <div class="detail-meta" id="d-meta">—</div>
+
+  <div class="detail-row"><span class="k">Status</span><span class="v" id="d-status">—</span></div>
+  <div class="detail-row"><span class="k">Applied</span><span class="v" id="d-applied">—</span></div>
+  <div class="detail-row"><span class="k">Issued</span><span class="v" id="d-issued">—</span></div>
+  <div class="detail-row"><span class="k">Finaled</span><span class="v" id="d-finaled">—</span></div>
+  <div class="detail-row"><span class="k">Contractor</span><span class="v" id="d-contractor">—</span></div>
+  <div class="detail-row"><span class="k">License (ROC#)</span><span class="v" id="d-license">—</span></div>
+  <div class="detail-row"><span class="k">Contractor phone</span><span class="v" id="d-contractor-phone">—</span></div>
+  <div class="detail-row"><span class="k">Contractor email</span><span class="v" id="d-contractor-email">—</span></div>
+  <div class="detail-row"><span class="k">Permit valuation</span><span class="v" id="d-valuation" style="font-weight:700;color:#fbbf24">—</span></div>
+  <div class="detail-row"><span class="k">Est. system size</span><span class="v" id="d-size" style="color:#94a3b8;font-style:italic">—</span></div>
+  <div class="detail-row"><span class="k">Battery</span><span class="v" id="d-battery">—</span></div>
+  <div class="detail-row"><span class="k">Homeowner</span><span class="v" id="d-owner" style="font-weight:700">—</span></div>
+  <div class="detail-row"><span class="k">Owner type</span><span class="v" id="d-owner-type">—</span></div>
+  <div class="detail-row"><span class="k">Mailing address</span><span class="v" id="d-mailing">—</span></div>
+  <div class="detail-row"><span class="k">Owner-occupied</span><span class="v" id="d-occupied">—</span></div>
+  <div class="detail-row"><span class="k">Lot size</span><span class="v" id="d-lot">—</span></div>
+  <div id="d-vesting-wrap" style="margin-top:8px;padding:7px 9px;background:#0d111c;border:1px solid #252d40;border-left:3px solid #6366f1;border-radius:8px;">
+    <div style="font-size:10px;text-transform:uppercase;color:#94a3b8;letter-spacing:0.8px;margin-bottom:3px;">&#128203; Title / Vesting (as recorded)</div>
+    <div id="d-vesting" style="font-size:12px;color:#e5e7eb;">—</div>
+    <div id="d-vesting-type" style="font-size:10px;color:#94a3b8;margin-top:2px;"></div>
+  </div>
+  <div class="detail-row"><span class="k">Last sold</span><span class="v" id="d-last-sold">—</span></div>
+  <div class="detail-row"><span class="k">Parcel</span><span class="v" id="d-parcel">—</span></div>
+  <div class="detail-row"><span class="k">Parcel type</span><span class="v" id="d-parcel-type">—</span></div>
+  <div class="detail-row"><span class="k">Satellite check</span><span class="v" id="d-sat">—</span></div>
+  <div id="d-sat-note" style="font-size: 10px; color: #94a3b8; margin-top: 4px; padding: 6px 8px; background: #0d111c; border-left: 2px solid #f59e0b; border-radius: 4px; display: none;"></div>
+
+  <div style="margin-top: 10px;">
+    <div style="font-size: 10px; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.8px; margin-bottom: 4px;">Permit Description</div>
+    <div id="d-description" style="font-size: 11px; color: #cbd5e1; background: #0d111c; border: 1px solid #252d40; border-radius: 8px; padding: 8px; line-height: 1.5; max-height: 120px; overflow-y: auto;">—</div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px;">
+    <a id="d-apple" target="_blank" style="background: #1e2438; color: #e5e7eb; border: 1.5px solid #2a3040; border-radius: 10px; padding: 8px 4px; font-size: 11px; font-weight: 700; text-align: center; text-decoration: none;">🗺 Apple Maps</a>
+    <a id="d-gsat" target="_blank" style="background: #1e2438; color: #e5e7eb; border: 1.5px solid #2a3040; border-radius: 10px; padding: 8px 4px; font-size: 11px; font-weight: 700; text-align: center; text-decoration: none;">🛰 Google Satellite</a>
+  </div>
+
+  <div class="notes-wrap">
+    <label>Notes</label>
+    <textarea id="d-notes" placeholder="Notes from door conversation…"></textarea>
+  </div>
+
+  <div class="outcomes">
+    <button class="obtn" data-outcome="apptset">Appt Set</button>
+    <button class="obtn" data-outcome="notint">Not Interested</button>
+    <button class="obtn" data-outcome="hassolar">Has Solar</button>
+    <button class="obtn" data-outcome="renter">Renter</button>
+    <button class="obtn" data-outcome="nih">NIH</button>
+    <button class="obtn" data-outcome="called">Called Back</button>
+    <button class="obtn" data-outcome="notmoved">Not Moved In</button>
+    <button class="obtn" data-outcome="soldu">SOLD 🎉</button>
+  </div>
+
+  <button class="update-btn" id="update-btn" onclick="saveAndPush()">💾 Update</button>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ============================================================================
+   Tonopah AZ — Blake's permit map (Map View, Leaflet)
+   Territory: Maricopa County, zip 85354 (Tonopah, AZ)
+   Utility: APS (Arizona Public Service)
+   Portal: Maricopa County Permit Center (Accela) + PermitViewer for historical
+   ============================================================================ */
+
+// ── Territory config ──
+const TERRITORY = {
+  name: 'Tonopah AZ',
+  zips: ['85354', '85322', '85326', '85361', '85342'],
+  // 85354 Tonopah · 85322 Arlington · 85326 Buckeye · 85361 Wittmann · 85342 Morristown
+  center: [33.64, -112.69],          // centroid of the 5-zip arc
+  zoom: 9,                           // wider so Buckeye ↔ Morristown both visible
+  county: 'Maricopa',
+  utility: 'APS',
+};
+
+// ── GitHub sync config (shared repo, per-territory state file) ──
+const GITHUB_REPO   = 'SolarResourceUSA/tonopah-route';
+const GITHUB_BRANCH = 'main';
+const STATE_FILE    = 'tonopah-permit-state.json';
+const LS_KEY        = 'srusa-tonopah-permit-state-v1';
+const PAT_LS_KEY    = 'srusa-gh-pat';
+// PAT is NOT embedded (GitHub secret scanning blocks that). Reads use the
+// public raw.githubusercontent.com endpoint (no auth). Writes use a token
+// supplied either via the URL fragment (#t=...) on first visit or cached in
+// localStorage from a prior visit. Reps never have to type anything — Ryan
+// sends a bookmarkable link, they tap it, token installs silently.
+(function installTokenFromHash() {
+  try {
+    const hash = window.location.hash || '';
+    const m = hash.match(/[#&]t=([^&]+)/);
+    if (m && m[1]) {
+      localStorage.setItem(PAT_LS_KEY, decodeURIComponent(m[1]).trim());
+      // Strip the token out of the URL so it's not sitting in the address bar.
+      const cleanHash = hash.replace(/[#&]t=[^&]+/, '').replace(/^#&/, '#');
+      const cleanUrl = window.location.pathname + window.location.search + (cleanHash === '#' ? '' : cleanHash);
+      window.history.replaceState({}, '', cleanUrl);
+    }
+  } catch (e) { /* best effort */ }
+})();
+function getGitHubPAT() {
+  let pat = localStorage.getItem(PAT_LS_KEY) || '';
+  if (!pat) {
+    pat = window.prompt('Enter the Solar Resource USA sync passcode (one time per device):') || '';
+    if (pat) localStorage.setItem(PAT_LS_KEY, pat.trim());
+  }
+  return pat.trim();
+}
+
+/* ============================================================================
+   PERMIT SEED DATA
+   ────────────────────────────────────────────────────────────────────────────
+   Populate this array with solar permits pulled from the Maricopa County
+   Permit Center (https://www.maricopa.gov/6003/Maricopa-Countys-Permit-Center)
+   filtered to zip 85354 (Tonopah) and the immediate area (Arlington 85322,
+   western Buckeye 85326 rural edges).
+
+   HARD RULES before adding a permit to this array:
+     1) EXCLUDE any permit that has passed final inspection (already installed)
+     2) SATELLITE-CHECK every rooftop — skip any that already show panels
+     3) Cross-reference tonopah-permit-state.json — skip if already worked
+
+   Required fields on every permit (per PROJECT-DIRECTION.md):
+     - id, address, lat, lng, status, issued, contractor, licenseROC,
+       systemKW, battery, owner, parcel, description
+   Description is the full verbatim text from the permit — captures battery
+   model, MPU upgrade specs, tap type, etc. Don't summarize.
+   ============================================================================ */
+const PERMITS_SEED = [
+  {
+    "id": "BLDR2600280",
+    "address": "36915 W Monroe St, Tonopah AZ 85354",
+    "lat": 33.447924,
+    "lng": -112.846356,
+    "status": "withdrawn",
+    "statusLabel": "Withdrawn",
+    "issued": null,
+    "applied": "2026-01-14",
+    "expire": null,
+    "finaled": null,
+    "bucket": "red",
+    "ageDays": 98,
+    "coordSource": "geocoded",
+    "parcel": "506-41-113J",
+    "description": "Install 5.67kW PV Solar (roof mounted)",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/c72916f8-9ee3-433a-911e-a4a7dffb75f0",
+    "source": "Maricopa County Permit Center",
+    "contractor": null,
+    "licenseROC": null,
+    "contractorPhone": null,
+    "contractorEmail": null,
+    "valuation": null,
+    "systemKW": 5.67,
+    "battery": false,
+    "batteryModel": null,
+    "owner": "GUIZA AARON AGUILERA/CANO MARIA D FARIAS",
+    "ownerType": "Individual",
+    "lastSold": "2025-11-01",
+    "lastSoldPrice": 474990,
+    "recentBuyer": true,
+    "parcelType": "Land",
+    "satelliteStatus": "verify",
+    "satelliteNote": ""
+  },
+  {
+    "id": "BLDR2600453",
+    "address": "20369 W Carver Rd, Buckeye AZ 85326",
+    "lat": 33.340796,
+    "lng": -112.488346,
+    "status": "issued",
+    "statusLabel": "Issued",
+    "issued": "2026-01-26",
+    "applied": "2026-01-21",
+    "expire": "2026-07-25",
+    "finaled": null,
+    "bucket": "red",
+    "ageDays": 91,
+    "coordSource": "geocoded",
+    "parcel": "400-53-275",
+    "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // SOLAREDHE HOME BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/afa29aad-f8ff-4b87-a717-732de8206e2e",
+    "source": "Maricopa County Permit Center",
+    "contractor": "Our World Energy",
+    "licenseROC": "",
+    "contractorPhone": "623-850-5700",
+    "contractorEmail": "permits@ourworldenergy.com",
+    "valuation": 27800,
+    "systemKW": null,
+    "battery": true,
+    "batteryModel": "SolarEdge Home Battery",
+    "owner": "Fabian Rojo Rodriguez & Lidia E Arrayales Arreola",
+    "ownerType": "Individual",
+    "lastSold": "2025-06-01",
+    "lastSoldPrice": 459000,
+    "recentBuyer": true,
+    "parcelType": "Land",
+    "satelliteStatus": "verify",
+    "satelliteNote": "Assessor lists parcel as Land; satellite shows vacant lot \u2014 house likely built after imagery"
+  },
+  {
+    "id": "BLDR2509583",
+    "address": "3212 N 367th Ave, Tonopah AZ 85354",
+    "lat": 33.483004,
+    "lng": -112.842111,
+    "status": "withdrawn",
+    "statusLabel": "Withdrawn",
+    "issued": null,
+    "applied": "2025-12-02",
+    "expire": null,
+    "finaled": null,
+    "bucket": "red",
+    "ageDays": 141,
+    "coordSource": "geocoded",
+    "parcel": "506-40-175J",
+    "description": "Installation of a 8.800 kW rooftop mounted photovoltaic system with battery storage system.",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/dec05adb-a352-4102-b4c0-23e0e75beccc",
+    "source": "Maricopa County Permit Center",
+    "contractor": null,
+    "licenseROC": null,
+    "contractorPhone": null,
+    "contractorEmail": null,
+    "valuation": null,
+    "systemKW": 8.8,
+    "battery": true,
+    "batteryModel": null,
+    "owner": "QUINTANA MANUEL G/QUINTANA AVILA MARIA E",
+    "ownerType": "Individual",
+    "lastSold": "2017-12-01",
+    "lastSoldPrice": 12000,
+    "recentBuyer": false,
+    "parcelType": "Mobile Home",
+    "satelliteStatus": "verify",
+    "satelliteNote": ""
+  },
+  {
+    "id": "BLDR2600600",
+    "address": "12319 S 204th Ln, Buckeye AZ 85326",
+    "lat": 33.334322,
+    "lng": -112.490539,
+    "status": "issued",
+    "statusLabel": "Issued",
+    "issued": "2026-01-30",
+    "applied": "2026-01-27",
+    "expire": "2026-08-31",
+    "finaled": null,
+    "bucket": "red",
+    "ageDays": 85,
+    "coordSource": "geocoded",
+    "parcel": "400-53-269",
+    "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // TESLA POWERWALL 3 BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/d027674f-b71f-4353-be8d-efe1bf3966e5",
+    "source": "Maricopa County Permit Center",
+    "contractor": "Our World Energy",
+    "licenseROC": "",
+    "contractorPhone": "623-850-5700",
+    "contractorEmail": "permits@ourworldenergy.com",
+    "valuation": 21450,
+    "systemKW": null,
+    "battery": true,
+    "batteryModel": "Tesla Powerwall 3",
+    "owner": "Luis Arreola Cervantes & Ivette Stephanie Martinez",
+    "ownerType": "Individual",
+    "lastSold": "2025-02-01",
+    "lastSoldPrice": 540000,
+    "recentBuyer": true,
+    "parcelType": "Land",
+    "satelliteStatus": "verify",
+    "satelliteNote": "Assessor lists parcel as Land; satellite shows vacant lot \u2014 house likely built after imagery"
+  },
+  {
+    "id": "BLDR2509950",
+    "address": "113 E Maricopa Rd, Buckeye AZ 85326",
+    "lat": 33.384557,
+    "lng": -112.582392,
+    "status": "withdrawn",
+    "statusLabel": "Withdrawn",
+    "issued": "2025-12-19",
+    "applied": "2025-12-16",
+    "expire": "2026-06-17",
+    "finaled": null,
+    "bucket": "red",
+    "ageDays": 127,
+    "coordSource": "geocoded",
+    "parcel": "504-53-100A",
+    "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM POWERWALL 3 BATTERY WITH MAIN SERVICE PANEL UPGRADE TO 225A SOLAR READY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/9d0ee3d4-c716-409f-9843-a87bea607145",
+    "source": "Maricopa County Permit Center",
+    "contractor": null,
+    "licenseROC": null,
+    "contractorPhone": null,
+    "contractorEmail": null,
+    "valuation": null,
+    "systemKW": null,
+    "battery": true,
+    "batteryModel": "Tesla Powerwall 3",
+    "owner": "TARPLEY LARRY P/BERTHA M",
+    "ownerType": "Individual",
+    "lastSold": null,
+    "lastSoldPrice": null,
+    "recentBuyer": false,
+    "parcelType": "Residential",
+    "satelliteStatus": "verify",
+    "satelliteNote": ""
+  },
+  {
+    "id": "BLDR2600845",
+    "address": "22211 W Wildflower Dr, Wittmann AZ 85361",
+    "lat": 33.777415,
+    "lng": -112.54035,
+    "status": "in-review",
+    "statusLabel": "In Review",
+    "issued": null,
+    "applied": "2026-02-03",
+    "expire": null,
+    "finaled": null,
+    "bucket": "red",
+    "ageDays": 78,
+    "coordSource": "geocoded",
+    "parcel": "503-39-081",
+    "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM// INTEGRATED TESLA BATTERY // ON EXISTING MANUFACTURED HOME // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/6841a8dc-91fe-4f5d-b2a1-21662e35544d",
+    "source": "Maricopa County Permit Center",
+    "contractor": null,
+    "licenseROC": null,
+    "contractorPhone": null,
+    "contractorEmail": null,
+    "valuation": null,
+    "systemKW": null,
+    "battery": true,
+    "batteryModel": "Tesla Integrated (Powerwall 3)",
+    "owner": "MAKULA LAURA ANN/CHARLES JOHN III",
+    "ownerType": "Individual",
+    "lastSold": "2021-12-01",
+    "lastSoldPrice": 379947,
+    "recentBuyer": false,
+    "parcelType": "Mobile Home",
+    "satelliteStatus": "verify",
+    "satelliteNote": ""
+  },
+  {
+    "id": "BLDR2600631",
+    "address": "22341 W Dove Valley Rd, Wittmann AZ 85361",
+    "lat": 33.780849,
+    "lng": -112.543971,
+    "status": "issued",
+    "statusLabel": "Issued",
+    "issued": "2026-02-12",
+    "applied": "2026-01-27",
+    "expire": "2026-08-11",
+    "finaled": null,
+    "bucket": "red",
+    "ageDays": 85,
+    "coordSource": "geocoded",
+    "parcel": "503-39-004N",
+    "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/aa5b34ab-8234-4998-887e-1a7e45298ea2",
+    "source": "Maricopa County Permit Center",
+    "contractor": "Green Muscle Solar",
+    "licenseROC": "328742",
+    "contractorPhone": "480-442-2240",
+    "contractorEmail": "permits@greenmusclesolar.com",
+    "valuation": 64482,
+    "systemKW": null,
+    "battery": true,
+    "batteryModel": "Tesla Integrated (Powerwall 3)",
+    "owner": "Yvette & Donald Haughton",
+    "ownerType": "Individual",
+    "lastSold": "2025-07-01",
+    "lastSoldPrice": 570000,
+    "recentBuyer": true,
+    "parcelType": "Residential",
+    "satelliteStatus": "clear",
+    "satelliteNote": "Dark-roof residence, no panels visible"
+  },
+  {
+    "id": "BLDR2509106",
+    "address": "22341 W Dove Valley Rd, Wittmann AZ 85361",
+    "lat": 33.780849,
+    "lng": -112.543971,
+    "status": "withdrawn",
+    "statusLabel": "Withdrawn",
+    "issued": "2025-11-24",
+    "applied": "2025-11-13",
+    "expire": "2026-05-23",
+    "finaled": null,
+    "bucket": "red",
+    "ageDays": 160,
+    "coordSource": "geocoded",
+    "parcel": "503-39-004N",
+    "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/eb1d97de-a429-4a51-baee-00273e5de52c",
+    "source": "Maricopa County Permit Center",
+    "contractor": null,
+    "licenseROC": null,
+    "contractorPhone": null,
+    "contractorEmail": null,
+    "valuation": null,
+    "systemKW": null,
+    "battery": true,
+    "batteryModel": "Tesla Integrated (Powerwall 3)",
+    "owner": "HAUGHTON YVETTE/DONALD",
+    "ownerType": "Individual",
+    "lastSold": "2025-07-01",
+    "lastSoldPrice": 570000,
+    "recentBuyer": true,
+    "parcelType": "Residential",
+    "satelliteStatus": "verify",
+    "satelliteNote": ""
+  },
+  {
+    "id": "BLDR2509990",
+    "address": "34811 W Buckeye Rd, Tonopah AZ 85354",
+    "lat": 33.43514,
+    "lng": -112.801243,
+    "status": "issued",
+    "statusLabel": "Issued",
+    "issued": "2025-12-22",
+    "applied": "2025-12-16",
+    "expire": "2026-07-13",
+    "finaled": null,
+    "bucket": "red",
+    "ageDays": 127,
+    "coordSource": "geocoded",
+    "parcel": "504-12-082F",
+    "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/e548f0aa-238b-415d-b5dc-d43e78b48510",
+    "source": "Maricopa County Permit Center",
+    "contractor": null,
+    "licenseROC": null,
+    "contractorPhone": null,
+    "contractorEmail": null,
+    "valuation": null,
+    "systemKW": null,
+    "battery": false,
+    "batteryModel": null,
+    "owner": "KALAR LONNIE/ROBERTA",
+    "ownerType": "Individual",
+    "lastSold": "2025-11-01",
+    "lastSoldPrice": 434900,
+    "recentBuyer": true,
+    "parcelType": "Residential",
+    "satelliteStatus": "verify",
+    "satelliteNote": ""
+  },
+  {
+    "id": "BLDR2507438",
+    "address": "35536 W Hammond Dr, Tonopah AZ 85354",
+    "lat": 33.424096,
+    "lng": -112.817211,
+    "status": "expired",
+    "statusLabel": "Expired",
+    "issued": "2025-09-19",
+    "applied": "2025-09-17",
+    "expire": "2026-03-18",
+    "finaled": null,
+    "bucket": "red",
+    "ageDays": 217,
+    "coordSource": "geocoded",
+    "parcel": "506-41-171X",
+    "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/0fbff63a-9aab-415f-a93a-b32b80f7bdca",
+    "source": "Maricopa County Permit Center",
+    "contractor": null,
+    "licenseROC": null,
+    "contractorPhone": null,
+    "contractorEmail": null,
+    "valuation": null,
+    "systemKW": null,
+    "battery": false,
+    "batteryModel": null,
+    "owner": "HOOKER PHILLIP M/KATHY",
+    "ownerType": "Individual",
+    "lastSold": "2005-05-01",
+    "lastSoldPrice": 81900,
+    "recentBuyer": false,
+    "parcelType": "Mobile Home",
+    "satelliteStatus": "verify",
+    "satelliteNote": ""
+  },
+  {
+    "id": "BLDR2601941",
+    "address": "6215 S El Mirage Rd, Tolleson AZ 85353",
+    "lat": 33.389263,
+    "lng": -112.322756,
+    "status": "issued",
+    "statusLabel": "Issued",
+    "issued": "2026-03-12",
+    "applied": "2026-03-11",
+    "expire": "2026-09-08",
+    "finaled": null,
+    "bucket": "green",
+    "ageDays": 42,
+    "coordSource": "geocoded",
+    "parcel": "500-69-032",
+    "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // TESLA POWERWALL 3 BATTERY // WITH MAIN SERVICE PANEL UPGRADE TO 225A SOLAR READY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/edcd1f1d-9e69-46a7-b96b-e216744071bb",
+    "source": "Maricopa County Permit Center",
+    "contractor": null,
+    "licenseROC": null,
+    "contractorPhone": null,
+    "contractorEmail": null,
+    "valuation": null,
+    "systemKW": null,
+    "battery": true,
+    "batteryModel": "Tesla Powerwall 3",
+    "owner": "EDWARD A AND GAYLE L BALKE TRUST",
+    "ownerType": "Entity",
+    "lastSold": null,
+    "lastSoldPrice": null,
+    "recentBuyer": false,
+    "parcelType": "Residential",
+    "satelliteStatus": "verify",
+    "satelliteNote": ""
+  },
+  {
+    "id": "BLDR2506917",
+    "address": "1024 N 193rd Ave, Buckeye AZ 85326",
+    "lat": 33.458155,
+    "lng": -112.47491,
+    "status": "withdrawn",
+    "statusLabel": "Withdrawn",
+    "issued": "2025-09-03",
+    "applied": "2025-08-28",
+    "expire": "2026-03-02",
+    "finaled": null,
+    "bucket": "red",
+    "ageDays": 237,
+    "coordSource": "geocoded",
+    "parcel": "502-36-011C",
+    "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM WHICH INCLUDES REDUCTION OF MAIN CIRCUIT BREAKER TO 175 AMPS // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/739a7c08-6fca-4496-9b43-18b14c3dd7be",
+    "source": "Maricopa County Permit Center",
+    "contractor": null,
+    "licenseROC": null,
+    "contractorPhone": null,
+    "contractorEmail": null,
+    "valuation": null,
+    "systemKW": null,
+    "battery": false,
+    "batteryModel": null,
+    "owner": "LOPEZ FAMILY LIVING TRUST",
+    "ownerType": "Entity",
+    "lastSold": null,
+    "lastSoldPrice": null,
+    "recentBuyer": false,
+    "parcelType": "Residential",
+    "satelliteStatus": "verify",
+    "satelliteNote": ""
+  },
+  {
+    "id": "BLDR2506807",
+    "address": "22347 W Patton Rd, Wittmann AZ 85361",
+    "lat": 33.738325,
+    "lng": -112.544178,
+    "status": "in-review",
+    "statusLabel": "In Review",
+    "issued": null,
+    "applied": "2025-08-25",
+    "expire": null,
+    "finaled": null,
+    "bucket": "red",
+    "ageDays": 240,
+    "coordSource": "geocoded",
+    "parcel": "503-34-018F",
+    "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/f628309b-f565-480d-972d-f1142b7dcab3",
+    "source": "Maricopa County Permit Center",
+    "contractor": null,
+    "licenseROC": null,
+    "contractorPhone": null,
+    "contractorEmail": null,
+    "valuation": null,
+    "systemKW": null,
+    "battery": false,
+    "batteryModel": null,
+    "owner": "MCHENRY MATTHEW",
+    "ownerType": "Individual",
+    "lastSold": null,
+    "lastSoldPrice": null,
+    "recentBuyer": false,
+    "parcelType": "Residential",
+    "satelliteStatus": "verify",
+    "satelliteNote": ""
+  },
+  {
+    "id": "BLDR2602638",
+    "address": "36923 W Monroe St, Tonopah AZ 85354",
+    "lat": 33.447924,
+    "lng": -112.846898,
+    "status": "requires-attention",
+    "statusLabel": "Requires Customer Attention",
+    "issued": null,
+    "applied": "2026-04-03",
+    "expire": null,
+    "finaled": null,
+    "bucket": "yellow",
+    "ageDays": 19,
+    "coordSource": "geocoded",
+    "parcel": "506-41-113H",
+    "description": "7.020 kW DC ROOF MOUNTED SOLAR",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/621d6fb4-9ef4-4cef-baef-0de36d879ce6",
+    "source": "Maricopa County Permit Center",
+    "contractor": null,
+    "licenseROC": null,
+    "contractorPhone": null,
+    "contractorEmail": null,
+    "valuation": null,
+    "systemKW": 7.02,
+    "battery": false,
+    "batteryModel": null,
+    "owner": "RD DESIGN TEAM INC",
+    "ownerType": "Entity",
+    "lastSold": null,
+    "lastSoldPrice": null,
+    "recentBuyer": false,
+    "parcelType": "Land",
+    "satelliteStatus": "verify",
+    "satelliteNote": ""
+  },
+  {
+    "id": "BLDR2602524",
+    "address": "33125 W Euclid Ave, Tonopah AZ 85354",
+    "lat": 33.36603,
+    "lng": -112.765407,
+    "status": "issued",
+    "statusLabel": "Issued",
+    "issued": "2026-04-09",
+    "applied": "2026-03-31",
+    "expire": "2026-10-06",
+    "finaled": null,
+    "bucket": "green",
+    "ageDays": 22,
+    "coordSource": "geocoded",
+    "parcel": "401-42-537",
+    "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/d68d0d72-1cd3-4468-b374-098980008309",
+    "source": "Maricopa County Permit Center",
+    "contractor": "Bright Home Energy",
+    "licenseROC": "",
+    "contractorPhone": "480-656-9538",
+    "contractorEmail": "permits@brighthomeenergy.com",
+    "valuation": 12012,
+    "systemKW": null,
+    "battery": false,
+    "batteryModel": null,
+    "owner": "Lisa Kaye Rose Casavant, Anthony Wayne & Nickolas Dahl",
+    "ownerType": "Individual",
+    "lastSold": "2026-02-01",
+    "lastSoldPrice": 332000,
+    "recentBuyer": true,
+    "parcelType": "Mobile Home",
+    "satelliteStatus": "clear",
+    "satelliteNote": "White manufactured home, no panels"
+  },
+  {
+    "id": "BLDR2600318",
+    "address": "22503 W Patton Rd, Wittmann AZ 85361",
+    "lat": 33.737178,
+    "lng": -112.546958,
+    "status": "issued",
+    "statusLabel": "Issued",
+    "issued": "2026-03-16",
+    "applied": "2026-01-15",
+    "expire": "2026-09-12",
+    "finaled": null,
+    "bucket": "red",
+    "ageDays": 97,
+    "coordSource": "geocoded",
+    "parcel": "503-34-016T",
+    "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/dae8f6e0-a6f5-43ab-acdf-a08bf4aa194d",
+    "source": "Maricopa County Permit Center",
+    "contractor": "Freedom Forever Arizona",
+    "licenseROC": "",
+    "contractorPhone": "602-888-7196",
+    "contractorEmail": "permitsarizona@freedomforever.com",
+    "valuation": 53888,
+    "systemKW": null,
+    "battery": true,
+    "batteryModel": "Tesla Integrated (Powerwall 3)",
+    "owner": "Eric J Ramsdell & Amber B Gaszsi-Ramsdell",
+    "ownerType": "Individual",
+    "lastSold": null,
+    "lastSoldPrice": null,
+    "recentBuyer": false,
+    "parcelType": "Residential",
+    "satelliteStatus": "clear",
+    "satelliteNote": "Residence with equestrian ring, no panels"
+  },
+  {
+    "id": "BLDR2602370",
+    "address": "37217 W Polk St, Tonopah AZ 85354",
+    "lat": 33.451002,
+    "lng": -112.852893,
+    "status": "issued",
+    "statusLabel": "Issued",
+    "issued": "2026-04-06",
+    "applied": "2026-03-25",
+    "expire": "2026-10-03",
+    "finaled": null,
+    "bucket": "green",
+    "ageDays": 28,
+    "coordSource": "geocoded",
+    "parcel": "506-40-004G",
+    "description": "INSTALLATION OF PV BATTERY STORAGE TESLA POWERWALL 3 WITH 11.5 kWh PV STORAGE CAPACITY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/1f570d38-21fc-4879-b524-5edeadc58156",
+    "source": "Maricopa County Permit Center",
+    "contractor": "SunX Solutions LLC",
+    "licenseROC": "",
+    "contractorPhone": "623-640-3032",
+    "contractorEmail": "Rlopez@sunxsolutions.com",
+    "valuation": 14000,
+    "systemKW": null,
+    "battery": true,
+    "batteryModel": "Tesla Powerwall 3",
+    "owner": "Familia Martinez Revocable Living Trust",
+    "ownerType": "Entity",
+    "lastSold": null,
+    "lastSoldPrice": null,
+    "recentBuyer": false,
+    "parcelType": "Mobile Home",
+    "satelliteStatus": "clear",
+    "satelliteNote": "White manufactured home, no panels",
+    "batteryKWh": 11.5
+  },
+  {
+    "id": "BLDR2600061",
+    "address": "25505 W Brookhart Way, Wittmann AZ 85361",
+    "lat": 33.741413,
+    "lng": -112.612173,
+    "status": "issued",
+    "statusLabel": "Issued",
+    "issued": "2026-01-21",
+    "applied": "2026-01-06",
+    "expire": "2026-07-20",
+    "finaled": null,
+    "bucket": "red",
+    "ageDays": 106,
+    "coordSource": "geocoded",
+    "parcel": "503-32-496A",
+    "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/d5e059a5-04c9-448f-abe3-e97bf78cb7ed",
+    "source": "Maricopa County Permit Center",
+    "contractor": "Freedom Forever Arizona",
+    "licenseROC": "",
+    "contractorPhone": "602-888-7196",
+    "contractorEmail": "permitsarizona@freedomforever.com",
+    "valuation": 12858,
+    "systemKW": null,
+    "battery": false,
+    "batteryModel": null,
+    "owner": "Jordan A & Amber Schauer",
+    "ownerType": "Individual",
+    "lastSold": "2025-11-01",
+    "lastSoldPrice": 517500,
+    "recentBuyer": true,
+    "parcelType": "Land",
+    "satelliteStatus": "clear",
+    "satelliteNote": "Dark-roof residence, no panels"
+  },
+  {
+    "id": "BLDR2601382",
+    "address": "20334 W Rainbow Blvd, Buckeye AZ 85326",
+    "lat": 33.255265,
+    "lng": -112.497754,
+    "status": "withdrawn",
+    "statusLabel": "Withdrawn",
+    "issued": null,
+    "applied": "2026-02-20",
+    "expire": null,
+    "finaled": null,
+    "bucket": "red",
+    "ageDays": 61,
+    "coordSource": "geocoded",
+    "parcel": "400-62-301",
+    "description": "installing a ground mount solar system with one battery",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/832a3d72-f9a1-4c34-b6bb-713b7d1baf81",
+    "source": "Maricopa County Permit Center",
+    "contractor": null,
+    "licenseROC": null,
+    "contractorPhone": null,
+    "contractorEmail": null,
+    "valuation": null,
+    "systemKW": null,
+    "battery": true,
+    "batteryModel": null,
+    "owner": "ABERNATHY-CASTLE LIVING TRUST",
+    "ownerType": "Entity",
+    "lastSold": null,
+    "lastSoldPrice": null,
+    "recentBuyer": false,
+    "parcelType": "Mobile Home",
+    "satelliteStatus": "verify",
+    "satelliteNote": ""
+  },
+  {
+    "id": "BLDR2601231",
+    "address": "805 S 348th Ave, Tonopah AZ 85354",
+    "lat": 33.439616,
+    "lng": -112.800342,
+    "status": "issued",
+    "statusLabel": "Issued",
+    "issued": "2026-02-20",
+    "applied": "2026-02-16",
+    "expire": "2026-09-12",
+    "finaled": null,
+    "bucket": "green",
+    "ageDays": 65,
+    "coordSource": "geocoded",
+    "parcel": "504-12-005T",
+    "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // (2) TESLA POWERWALL 3 BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/ac7269ff-6e1d-4b74-b168-0a659efa0120",
+    "source": "Maricopa County Permit Center",
+    "contractor": "Our World Energy",
+    "licenseROC": "",
+    "contractorPhone": "623-850-5700",
+    "contractorEmail": "permits@ourworldenergy.com",
+    "valuation": 27150,
+    "systemKW": null,
+    "battery": true,
+    "batteryModel": "Tesla Powerwall 3",
+    "owner": "James Edwin Moreland Jr & Shana A",
+    "ownerType": "Individual",
+    "lastSold": "2019-03-01",
+    "lastSoldPrice": 164000,
+    "recentBuyer": false,
+    "parcelType": "Mobile Home",
+    "satelliteStatus": "clear",
+    "satelliteNote": "Mobile home compound, no panels"
+  },
+  {
+    "id": "BLDR2509075",
+    "address": "11305 S 195th Dr, Buckeye AZ 85326",
+    "lat": 33.343922,
+    "lng": -112.470398,
+    "status": "withdrawn",
+    "statusLabel": "Withdrawn",
+    "issued": "2025-11-24",
+    "applied": "2025-11-13",
+    "expire": "2026-05-23",
+    "finaled": null,
+    "bucket": "red",
+    "ageDays": 160,
+    "coordSource": "geocoded",
+    "parcel": "400-83-019",
+    "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/ad54a796-bc79-4edb-91b5-ef07fc68eeb3",
+    "source": "Maricopa County Permit Center",
+    "contractor": null,
+    "licenseROC": null,
+    "contractorPhone": null,
+    "contractorEmail": null,
+    "valuation": null,
+    "systemKW": null,
+    "battery": true,
+    "batteryModel": "Tesla Integrated (Powerwall 3)",
+    "owner": "YANNONE ANTHONY W",
+    "ownerType": "Individual",
+    "lastSold": null,
+    "lastSoldPrice": null,
+    "recentBuyer": false,
+    "parcelType": "Residential",
+    "satelliteStatus": "verify",
+    "satelliteNote": ""
+  },
+  {
+    "id": "BLDR2508599",
+    "address": "12856 S Zuni Rd, Buckeye AZ 85326",
+    "lat": 33.328416,
+    "lng": -112.485268,
+    "status": "withdrawn",
+    "statusLabel": "Withdrawn",
+    "issued": "2025-10-31",
+    "applied": "2025-10-29",
+    "expire": "2026-04-29",
+    "finaled": null,
+    "bucket": "red",
+    "ageDays": 175,
+    "coordSource": "geocoded",
+    "parcel": "400-76-043",
+    "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/0fcbd612-c121-42fe-941d-5fcdc54175ae",
+    "source": "Maricopa County Permit Center",
+    "contractor": null,
+    "licenseROC": null,
+    "contractorPhone": null,
+    "contractorEmail": null,
+    "valuation": null,
+    "systemKW": null,
+    "battery": true,
+    "batteryModel": "Tesla Integrated (Powerwall 3)",
+    "owner": "REICHENBERGER ROBERT M JR/SANDRA D",
+    "ownerType": "Individual",
+    "lastSold": null,
+    "lastSoldPrice": null,
+    "recentBuyer": false,
+    "parcelType": "Residential",
+    "satelliteStatus": "verify",
+    "satelliteNote": ""
+  },
+  {
+    "id": "BLDR2602821",
+    "address": "9413 S 543rd Ave, Tonopah AZ 85354",
+    "lat": 33.360316,
+    "lng": -113.220471,
+    "status": "issued",
+    "statusLabel": "Issued",
+    "issued": "2026-04-15",
+    "applied": "2026-04-10",
+    "expire": "2026-10-12",
+    "finaled": null,
+    "bucket": "green",
+    "ageDays": 12,
+    "coordSource": "geocoded",
+    "parcel": "401-57-402A",
+    "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/e19ff565-9366-4477-aa9b-66c7e80c4b60",
+    "source": "Maricopa County Permit Center",
+    "contractor": "United Energy Partners",
+    "licenseROC": "344599",
+    "contractorPhone": "480-226-1383",
+    "contractorEmail": "scott.wahlstrom@uepsolar.com",
+    "valuation": 29450,
+    "systemKW": null,
+    "battery": true,
+    "batteryModel": "Tesla Integrated (Powerwall 3)",
+    "owner": "Eddie Duane Combs & Susan Corbin",
+    "ownerType": "Individual",
+    "lastSold": null,
+    "lastSoldPrice": null,
+    "recentBuyer": false,
+    "parcelType": "Residential",
+    "satelliteStatus": "clear",
+    "satelliteNote": "Rural dwelling with carport and water tank, no panels"
+  },
+  {
+    "id": "BLDR2602291",
+    "address": "2907 N 391st Ave, Tonopah AZ 85354",
+    "lat": 33.479554,
+    "lng": -112.894199,
+    "status": "issued",
+    "statusLabel": "Issued",
+    "issued": "2026-04-09",
+    "applied": "2026-03-23",
+    "expire": "2026-10-10",
+    "finaled": null,
+    "bucket": "green",
+    "ageDays": 30,
+    "coordSource": "geocoded",
+    "parcel": "506-45-150A",
+    "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/c93c5d8e-753f-4ef1-a3aa-5ca285b87e76",
+    "source": "Maricopa County Permit Center",
+    "contractor": "Independent Solar LLC",
+    "licenseROC": "",
+    "contractorPhone": "480-408-4986",
+    "contractorEmail": "permitting@independentsolar.com",
+    "valuation": 24265,
+    "systemKW": null,
+    "battery": false,
+    "batteryModel": null,
+    "owner": "Estellar V Nelson & Bishop V Ybarra",
+    "ownerType": "Individual",
+    "lastSold": "2026-03-01",
+    "lastSoldPrice": 285000,
+    "recentBuyer": true,
+    "parcelType": "Mobile Home",
+    "satelliteStatus": "verify",
+    "satelliteNote": "Satellite shows sparse lot with small outbuilding \u2014 likely imagery predates construction"
+  },
+  {
+    "id": "BLDR2602145",
+    "address": "1127 N 381st Dr, Tonopah AZ 85354",
+    "lat": 33.460727,
+    "lng": -112.872726,
+    "status": "issued",
+    "statusLabel": "Issued",
+    "issued": "2026-03-19",
+    "applied": "2026-03-18",
+    "expire": "2026-10-14",
+    "finaled": null,
+    "bucket": "green",
+    "ageDays": 35,
+    "coordSource": "geocoded",
+    "parcel": "506-45-295B",
+    "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/f4e4f21b-4d66-4d7d-bce8-4de6e0f8a96e",
+    "source": "Maricopa County Permit Center",
+    "contractor": "Empower Electric Solar",
+    "licenseROC": "346621",
+    "contractorPhone": "800-306-6953",
+    "contractorEmail": "arizonapermits@empoweryourhome.com",
+    "valuation": 27681,
+    "systemKW": null,
+    "battery": true,
+    "batteryModel": "Tesla Integrated (Powerwall 3)",
+    "owner": "Joy L, James M & Deborah Dement",
+    "ownerType": "Individual",
+    "lastSold": "2018-07-01",
+    "lastSoldPrice": 197000,
+    "recentBuyer": false,
+    "parcelType": "Mobile Home",
+    "satelliteStatus": "clear",
+    "satelliteNote": "Dark-roof mobile home, no panels"
+  },
+  {
+    "id": "BLDR2600729",
+    "address": "38402 W Latham St, Tonopah AZ 85354",
+    "lat": 33.459588,
+    "lng": -112.87837,
+    "status": "issued",
+    "statusLabel": "Issued",
+    "issued": "2026-02-19",
+    "applied": "2026-01-30",
+    "expire": "2026-08-18",
+    "finaled": null,
+    "bucket": "red",
+    "ageDays": 82,
+    "coordSource": "geocoded",
+    "parcel": "506-45-350",
+    "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM ON EXISTING MANUFACTURED HOME // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/8cf572c0-817f-42be-b67b-c5e5c38de634",
+    "source": "Maricopa County Permit Center",
+    "contractor": "Capital Energy LLC",
+    "licenseROC": "",
+    "contractorPhone": "480-896-5847",
+    "contractorEmail": "permits@cptlenergy.com",
+    "valuation": 9917,
+    "systemKW": null,
+    "battery": false,
+    "batteryModel": null,
+    "owner": "Anthony Angulo Borboa",
+    "ownerType": "Individual",
+    "lastSold": "2026-01-01",
+    "lastSoldPrice": 336000,
+    "recentBuyer": true,
+    "parcelType": "Mobile Home",
+    "satelliteStatus": "clear",
+    "satelliteNote": "Manufactured home with carport, no panels"
+  },
+  {
+    "id": "BLDR2600204",
+    "address": "32828 N 228th Dr, Wittmann AZ 85361",
+    "lat": 33.781076,
+    "lng": -112.554586,
+    "status": "fees-due",
+    "statusLabel": "Fees Due",
+    "issued": "2026-01-26",
+    "applied": "2026-01-12",
+    "expire": "2026-07-25",
+    "finaled": null,
+    "bucket": "red",
+    "ageDays": 100,
+    "coordSource": "geocoded",
+    "parcel": "503-17-007N",
+    "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/c553d056-dd29-4adb-a1a3-cd672239dbc5",
+    "source": "Maricopa County Permit Center",
+    "contractor": null,
+    "licenseROC": null,
+    "contractorPhone": null,
+    "contractorEmail": null,
+    "valuation": null,
+    "systemKW": null,
+    "battery": true,
+    "batteryModel": "Tesla Integrated (Powerwall 3)",
+    "owner": "BERES KEITH R/CALVIN-BERES DEBRA",
+    "ownerType": "Individual",
+    "lastSold": "2025-09-01",
+    "lastSoldPrice": 576500,
+    "recentBuyer": true,
+    "parcelType": "Residential",
+    "satelliteStatus": "verify",
+    "satelliteNote": ""
+  },
+  {
+    "id": "BLDR2601598",
+    "address": "37203 W Hilton Ave, Tonopah AZ 85354",
+    "lat": 33.426013,
+    "lng": -112.853354,
+    "status": "fees-due",
+    "statusLabel": "Fees Due",
+    "issued": null,
+    "applied": "2026-02-27",
+    "expire": null,
+    "finaled": null,
+    "bucket": "yellow",
+    "ageDays": 54,
+    "coordSource": "geocoded",
+    "parcel": "506-41-139D",
+    "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM ON EXISTING MANUFACTURED HOME // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/0996b598-8a02-4fb4-a633-60515770fd41",
+    "source": "Maricopa County Permit Center",
+    "contractor": null,
+    "licenseROC": null,
+    "contractorPhone": null,
+    "contractorEmail": null,
+    "valuation": null,
+    "systemKW": null,
+    "battery": true,
+    "batteryModel": "Tesla Integrated (Powerwall 3)",
+    "owner": "WEAVER LOGAN",
+    "ownerType": "Individual",
+    "lastSold": "2025-11-01",
+    "lastSoldPrice": 395000,
+    "recentBuyer": true,
+    "parcelType": "Mobile Home",
+    "satelliteStatus": "verify",
+    "satelliteNote": ""
+  },
+  {
+    "id": "BLDR2603584",
+    "address": "37203 W Hilton Ave, Tonopah AZ 85354",
+    "lat": 33.426013,
+    "lng": -112.853354,
+    "status": "in-review",
+    "statusLabel": "In Review",
+    "issued": null,
+    "applied": "2026-05-06",
+    "expire": null,
+    "finaled": null,
+    "bucket": "red",
+    "ageDays": 15,
+    "coordSource": "geocoded",
+    "parcel": "506-41-139D",
+    "description": "Install 17.22kW PV Solar (roof mounted) + Tesla Powerwall 3 battery storage",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/fe08845e-f791-4dde-9ab6-219271139143",
+    "source": "Maricopa County Permit Center",
+    "contractor": null,
+    "licenseROC": null,
+    "contractorPhone": null,
+    "contractorEmail": null,
+    "valuation": null,
+    "systemKW": 17.22,
+    "battery": true,
+    "batteryModel": "Tesla Powerwall 3",
+    "owner": "WEAVER LOGAN",
+    "ownerType": "Individual",
+    "lastSold": "2025-11-01",
+    "lastSoldPrice": 395000,
+    "recentBuyer": true,
+    "parcelType": "Mobile Home",
+    "satelliteStatus": "no-solar",
+    "satelliteNote": "Clean tan/brown roof - no panels visible. Fresh install.",
+    "outcome": "",
+    "outcomeDate": null,
+    "notes": ""
+  },
+  {
+    "id": "BLDR2603461",
+    "address": "223 6th Ave, Buckeye AZ 85326",
+    "lat": 33.382072,
+    "lng": -112.578261,
+    "status": "in-review",
+    "statusLabel": "In Review",
+    "issued": null,
+    "applied": "2026-05-03",
+    "expire": null,
+    "finaled": null,
+    "bucket": "red",
+    "ageDays": 18,
+    "coordSource": "geocoded",
+    "parcel": "504-52-050",
+    "description": "Roof mounted APS grid tie photovoltaic system with battery storage",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/5b171f6f-38fd-4c53-8aec-1f7873457a16",
+    "source": "Maricopa County Permit Center",
+    "contractor": null,
+    "licenseROC": null,
+    "contractorPhone": null,
+    "contractorEmail": null,
+    "valuation": null,
+    "systemKW": null,
+    "battery": true,
+    "batteryModel": null,
+    "owner": "LUNA VANESSA VALENCIA/ZUNIGA SALVADOR DE LIRA",
+    "ownerType": "Individual",
+    "lastSold": "2025-04-01",
+    "lastSoldPrice": 345000,
+    "recentBuyer": false,
+    "parcelType": "Mobile Home",
+    "satelliteStatus": "no-solar",
+    "satelliteNote": "Clean green/dark roof - no panels visible. Fresh install.",
+    "outcome": "",
+    "outcomeDate": null,
+    "notes": ""
+  },
+  {
+    "id": "BLDR2603381",
+    "address": "25163 W Adamanda Dr, Morristown AZ 85342",
+    "lat": 33.83291320746,
+    "lng": -112.604837258609,
+    "status": "issued",
+    "statusLabel": "Issued",
+    "issued": "2026-05-05",
+    "applied": "2026-04-29",
+    "expire": "2026-11-01",
+    "finaled": null,
+    "bucket": "green",
+    "ageDays": 22,
+    "coordSource": "geocoded",
+    "parcel": "503-15-037A",
+    "description": "Roof mounted APS grid tie PV system + integrated Tesla battery on existing manufactured home. 2017 NEC Articles 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/28a361ed-f194-4e10-aefa-d0a37feab306",
+    "source": "Maricopa County Permit Center",
+    "contractor": "Sunsolar Solutions",
+    "licenseROC": null,
+    "contractorPhone": "602-697-2737",
+    "contractorEmail": "permits@sunsolarsolutions.com",
+    "valuation": 44260,
+    "systemKW": 17.1,
+    "battery": true,
+    "batteryModel": "Tesla Powerwall",
+    "owner": "SAINSBURY MICHAEL/NATALYA/RONALD/ENRIQUEZ CYNTHIA",
+    "ownerType": "Individual",
+    "lastSold": "2024-02-01",
+    "lastSoldPrice": 175000,
+    "recentBuyer": false,
+    "parcelType": "Mobile Home",
+    "satelliteStatus": "verify",
+    "satelliteNote": "Low imagery quality at high zoom - needs field verify.",
+    "outcome": "",
+    "outcomeDate": null,
+    "notes": ""
+  },
+  {
+    "id": "BLDR2603378",
+    "address": "13909 S Airport Rd, Buckeye AZ 85326",
+    "lat": 33.320742676818,
+    "lng": -112.50422233983,
+    "status": "issued",
+    "statusLabel": "Issued",
+    "issued": "2026-05-05",
+    "applied": "2026-04-29",
+    "expire": "2026-11-01",
+    "finaled": null,
+    "bucket": "green",
+    "ageDays": 22,
+    "coordSource": "geocoded",
+    "parcel": "400-52-216H",
+    "description": "Roof mounted APS grid tie PV system + integrated Tesla battery. 2017 NEC Articles 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/9169fea4-cc35-44fa-afc2-fd9912fdf079",
+    "source": "Maricopa County Permit Center",
+    "contractor": "Our World Energy",
+    "licenseROC": null,
+    "contractorPhone": "623-850-5700",
+    "contractorEmail": "permits@ourworldenergy.com",
+    "valuation": 20250,
+    "systemKW": 5.1,
+    "battery": true,
+    "batteryModel": "Tesla Powerwall",
+    "owner": "PADILLA DANIEL IVAN/RODRIGUEZ DEANAMARIE REYES",
+    "ownerType": "Individual",
+    "lastSold": "2019-07-01",
+    "lastSoldPrice": 258990,
+    "recentBuyer": false,
+    "parcelType": "Mobile Home",
+    "satelliteStatus": "no-solar",
+    "satelliteNote": "Clean grey/white roof - no panels visible. Fresh install.",
+    "outcome": "",
+    "outcomeDate": null,
+    "notes": ""
+  },
+  {
+    "id": "BLDR2603344",
+    "address": "24733 W Rushmore Dr, Morristown AZ 85342",
+    "lat": 33.872654,
+    "lng": -112.596085,
+    "status": "in-review",
+    "statusLabel": "In Review",
+    "issued": null,
+    "applied": "2026-04-29",
+    "expire": null,
+    "finaled": null,
+    "bucket": "red",
+    "ageDays": 22,
+    "coordSource": "geocoded",
+    "parcel": "503-21-024D",
+    "description": "Roof mounted APS grid tie photovoltaic system with battery storage",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/ba2c9006-4dc4-4558-b3a3-6f65c0314d7e",
+    "source": "Maricopa County Permit Center",
+    "contractor": null,
+    "licenseROC": null,
+    "contractorPhone": null,
+    "contractorEmail": null,
+    "valuation": null,
+    "systemKW": null,
+    "battery": true,
+    "batteryModel": null,
+    "owner": "STEELE DONNA M TR",
+    "ownerType": "Trust",
+    "lastSold": null,
+    "lastSoldPrice": null,
+    "recentBuyer": false,
+    "parcelType": "Mobile Home",
+    "satelliteStatus": "no-solar",
+    "satelliteNote": "Clean white flat roof - no panels visible. Fresh install.",
+    "outcome": "",
+    "outcomeDate": null,
+    "notes": ""
+  },
+  {
+    "id": "BLDR2603159",
+    "address": "3875 N 371st Ave, Tonopah AZ 85354",
+    "lat": 33.490792,
+    "lng": -112.850337,
+    "status": "issued",
+    "statusLabel": "Issued",
+    "issued": "2026-05-15",
+    "applied": "2026-04-22",
+    "expire": "2026-11-11",
+    "finaled": null,
+    "bucket": "green",
+    "ageDays": 29,
+    "coordSource": "geocoded",
+    "parcel": "506-40-192A",
+    "description": "Roof mounted APS grid tie PV system - 6.63kW. 2017 NEC Articles 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/ba1e6942-ea43-45cc-8cc9-75a670368303",
+    "source": "Maricopa County Permit Center",
+    "contractor": null,
+    "licenseROC": null,
+    "contractorPhone": null,
+    "contractorEmail": null,
+    "valuation": 36711,
+    "systemKW": 6.63,
+    "battery": false,
+    "batteryModel": null,
+    "owner": "SEE CODY/SHAYLENE",
+    "ownerType": "Individual",
+    "lastSold": null,
+    "lastSoldPrice": null,
+    "recentBuyer": false,
+    "parcelType": "Mobile Home",
+    "satelliteStatus": "no-structure",
+    "satelliteNote": "No structure visible in satellite imagery - undeveloped lot or new construction not yet captured.",
+    "outcome": "",
+    "outcomeDate": null,
+    "notes": ""
+  },
+  {
+    "id": "BLDR2603076",
+    "address": "43418 W Encanto Blvd, Tonopah AZ 85354",
+    "lat": 33.4348,
+    "lng": -112.9083,
+    "status": "in-review",
+    "statusLabel": "In Review",
+    "issued": null,
+    "applied": "2026-04-20",
+    "expire": null,
+    "finaled": null,
+    "bucket": "red",
+    "ageDays": 31,
+    "coordSource": "geocoded",
+    "parcel": "506-33-504N",
+    "description": "Roof mounted APS grid tie photovoltaic system with battery storage",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/99a01cd3-1d95-4d9a-9bca-d31f00bcf08a",
+    "source": "Maricopa County Permit Center",
+    "contractor": null,
+    "licenseROC": null,
+    "contractorPhone": null,
+    "contractorEmail": null,
+    "valuation": null,
+    "systemKW": null,
+    "battery": true,
+    "batteryModel": null,
+    "owner": "FINLEY LARRY R JR/JANET",
+    "ownerType": "Individual",
+    "lastSold": "2025-05-01",
+    "lastSoldPrice": 275000,
+    "recentBuyer": false,
+    "parcelType": "Mobile Home",
+    "satelliteStatus": "verify",
+    "satelliteNote": "Address resolved to zip code only - needs field confirm.",
+    "outcome": "",
+    "outcomeDate": null,
+    "notes": ""
+  },
+  {
+    "id": "BLDR2603069",
+    "address": "302 4th Ave E, Buckeye AZ 85326",
+    "lat": 33.380823,
+    "lng": -112.57987,
+    "status": "issued",
+    "statusLabel": "Issued",
+    "issued": "2026-04-24",
+    "applied": "2026-04-19",
+    "expire": "2026-10-21",
+    "finaled": null,
+    "bucket": "green",
+    "ageDays": 32,
+    "coordSource": "geocoded",
+    "parcel": "504-51-100",
+    "description": "Roof mounted APS grid tie PV system + integrated Tesla battery. 2017 NEC Articles 690 & 705",
+    "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/c826f3e8-280f-4afc-8708-70f2fa72b75f",
+    "source": "Maricopa County Permit Center",
+    "contractor": "Our World Energy",
+    "licenseROC": null,
+    "contractorPhone": "623-850-5700",
+    "contractorEmail": "permits@ourworldenergy.com",
+    "valuation": 15350,
+    "systemKW": 2.7,
+    "battery": true,
+    "batteryModel": "Tesla Powerwall",
+    "owner": "FARR FAMILY TRUST",
+    "ownerType": "Trust",
+    "lastSold": null,
+    "lastSoldPrice": null,
+    "recentBuyer": false,
+    "parcelType": "Mobile Home",
+    "satelliteStatus": "no-solar",
+    "satelliteNote": "Dark plain roof - no panels visible. Fresh install.",
+    "outcome": "",
+    "outcomeDate": null,
+    "notes": ""
+  },
+  {"id": "BLDR2504155", "address": "5703 S 339th Ave Tonopah AZ 85354", "lat": 33.394597430432, "lng": -112.780799759915, "status": "withdrawn", "statusLabel": "Withdrawn", "issued": "2025-05-27", "applied": "2025-05-21", "expire": "2025-11-23", "finaled": null, "bucket": "red", "ageDays": 394, "coordSource": "geocoded", "parcel": "504-32-188", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/8df3cf25-82f9-4efb-b9c2-05bb11dea2f2", "source": "Maricopa County Permit Center", "contractor": "WNT LLC", "licenseROC": null, "contractorPhone": "480-747-4116", "contractorEmail": "sfrey@first-electric.net", "valuation": 63990, "systemKW": 27.0, "systemKWSource": "est-valuation", "battery": true, "batteryModel": "Tesla Powerwall", "owner": "PINKLEY JOSEPH W", "ownerType": "Individual", "lastSold": null, "lastSoldPrice": null, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "5703 S 339TH AVE, TONOPAH, AZ 85354", "lotSize": 47850, "ownerOccupied": true, "isNew": true, "vesting": "PINKLEY JOSEPH W", "isTrust": false, "leadNames": ["Joseph W Pinkley"], "leadName": "Joseph W Pinkley"},
+  {"id": "BLDR2502801", "address": "34019 W Superior Ave Tonopah AZ 85354", "lat": 33.415219301086, "lng": -112.784352513395, "status": "withdrawn", "statusLabel": "Withdrawn", "issued": "2025-04-24", "applied": "2025-04-03", "expire": "2025-10-21", "finaled": null, "bucket": "red", "ageDays": 442, "coordSource": "geocoded", "parcel": "504-33-022S", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/1b1f63dd-18e3-485a-a453-29045b5717af", "source": "Maricopa County Permit Center", "contractor": "Empower Electric Solar", "licenseROC": "346621", "contractorPhone": "800-306-6953", "contractorEmail": "arizonapermits@empoweryourhome.com", "valuation": 38823, "systemKW": 14.5, "systemKWSource": "est-valuation", "battery": true, "batteryModel": "Tesla Powerwall", "owner": "GAMEZ JUAN PARRA/BRADBURY ANITA/SOBERANIS CHRISTIAN S", "ownerType": "Individual", "lastSold": "2021-03-01", "lastSoldPrice": 250000, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "34019 W SUPERIOR AVE, TONOPAH, AZ 85354", "lotSize": 53790, "ownerOccupied": true, "isNew": true, "vesting": "GAMEZ JUAN PARRA/BRADBURY ANITA/SOBERANIS CHRISTIAN S", "isTrust": false, "leadNames": ["Juan Parra Gamez", "Anita Bradbury", "Christian S Soberanis"], "leadName": "Juan Parra Gamez, Anita Bradbury & Christian S Soberanis"},
+  {"id": "BLDR2500566", "address": "25180 W Bowker St Buckeye AZ 85326", "lat": 33.396421039196, "lng": -112.592360327296, "status": "withdrawn", "statusLabel": "Withdrawn", "issued": null, "applied": "2025-01-22", "expire": null, "finaled": null, "bucket": "red", "ageDays": 513, "coordSource": "geocoded", "parcel": "504-41-855", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/2e2f8943-7f50-4e9e-8236-a16cede90001", "source": "Maricopa County Permit Center", "contractor": "Not issued \u2014 no contractor on public record", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 35712, "systemKW": 18.0, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "MATLOCK ALEISHA", "ownerType": "Individual", "lastSold": "2024-02-01", "lastSoldPrice": 491930, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "25180 W BOWKER ST, BUCKEYE, AZ 85326", "lotSize": 6208, "ownerOccupied": true, "isNew": true, "vesting": "MATLOCK ALEISHA", "isTrust": false, "leadNames": ["Aleisha Matlock"], "leadName": "Aleisha Matlock"},
+  {"id": "BLDR2402712", "address": "30240 W Lower River Rd Buckeye AZ 85326", "lat": 33.363750979008, "lng": -112.703299677327, "status": "withdrawn", "statusLabel": "Withdrawn", "issued": null, "applied": "2024-09-12", "expire": null, "finaled": null, "bucket": "red", "ageDays": 645, "coordSource": "geocoded", "parcel": "401-19-071K", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM WHICH INCLUDES REDUCTION OF MAIN CIRCUIT BREAKER TO 175 AMPS // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/3a229dd5-7854-426a-ac7a-8e1122ee4535", "source": "Maricopa County Permit Center", "contractor": "Not issued \u2014 no contractor on public record", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 25100, "systemKW": 12.5, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "SCHRODER LIVING TRUST", "ownerType": "Trust", "lastSold": null, "lastSoldPrice": null, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "30251 W LOWER RIVER RD, BUCKEYE, AZ 85326", "lotSize": 2121023, "ownerOccupied": false, "isNew": true, "vesting": "SCHRODER LIVING TRUST", "isTrust": true, "leadNames": ["Schroder"], "leadName": "Schroder"},
+  {"id": "BLDR2502084", "address": "19120 W Melvin St Buckeye AZ 85326", "lat": 33.451409634879, "lng": -112.471305528875, "status": "withdrawn", "statusLabel": "Withdrawn", "issued": null, "applied": "2025-03-12", "expire": null, "finaled": null, "bucket": "red", "ageDays": 464, "coordSource": "geocoded", "parcel": "502-36-086", "description": "Rooftop solar panel and Tesla Powerwall 3 battery. backup installation", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/490e9c47-e3eb-4406-a884-79a6b067b6a4", "source": "Maricopa County Permit Center", "contractor": "Not issued \u2014 no contractor on public record", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 40356, "systemKW": 15.0, "systemKWSource": "est-valuation", "battery": true, "batteryModel": "Tesla Powerwall 3", "owner": "TORIBIO REVOCABLE FAMILY TRUST", "ownerType": "Trust", "lastSold": null, "lastSoldPrice": null, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "19120 W MELVIN ST, BUCKEYE, AZ 85326", "lotSize": 59360, "ownerOccupied": true, "isNew": true, "vesting": "TORIBIO REVOCABLE FAMILY TRUST", "isTrust": true, "leadNames": ["Toribio"], "leadName": "Toribio"},
+  {"id": "BLDR2400726", "address": "16605 S 202nd Dr Buckeye AZ 85326", "lat": 33.295603801168, "lng": -112.485576473403, "status": "withdrawn", "statusLabel": "Withdrawn", "issued": null, "applied": "2024-07-10", "expire": null, "finaled": null, "bucket": "red", "ageDays": 709, "coordSource": "geocoded", "parcel": "400-58-074B", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/5a2925a3-1023-4377-919a-91dd2e626f43", "source": "Maricopa County Permit Center", "contractor": "Not issued \u2014 no contractor on public record", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 67348, "systemKW": 33.5, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "ORANTES FRANCISCO JAVIER CASTILLO", "ownerType": "Individual", "lastSold": "2023-04-01", "lastSoldPrice": 375000, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "16605 S 202ND DR, BUCKEYE, AZ 85326", "lotSize": 59243, "ownerOccupied": true, "isNew": true, "vesting": "ORANTES FRANCISCO JAVIER CASTILLO", "isTrust": false, "leadNames": ["Francisco Javier Castillo Orantes"], "leadName": "Francisco Javier Castillo Orantes"},
+  {"id": "BLDR2506027", "address": "3320 N 329th Dr Tonopah AZ 85354", "lat": 33.485750543645, "lng": -112.761432534438, "status": "expired", "statusLabel": "Expired", "issued": "2025-08-01", "applied": "2025-07-29", "expire": "2026-01-28", "finaled": null, "bucket": "red", "ageDays": 325, "coordSource": "geocoded", "parcel": "504-09-052", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/749e489e-74e6-4a59-8b12-87da7feaa305", "source": "Maricopa County Permit Center", "contractor": "Freedom Forever Arizona", "licenseROC": null, "contractorPhone": "602-888-7196", "contractorEmail": "permitsarizona@freedomforever.com", "valuation": 20117, "systemKW": 10.0, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "CASTILLO MANUEL B/VALDEZ JUAN JUAREZ", "ownerType": "Individual", "lastSold": "2025-05-01", "lastSoldPrice": 405000, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "3320 N 329TH DR, TONOPAH, AZ 85354", "lotSize": 54664, "ownerOccupied": true, "isNew": true, "vesting": "CASTILLO MANUEL B/VALDEZ JUAN JUAREZ", "isTrust": false, "leadNames": ["Manuel B Castillo", "Juan Juarez Valdez"], "leadName": "Manuel B Castillo & Juan Juarez Valdez"},
+  {"id": "BLDR2504762", "address": "30116 N 206th Ave Wittmann AZ 85361", "lat": 33.756606422251, "lng": -112.5059928617, "status": "expired", "statusLabel": "Expired", "issued": "2025-07-01", "applied": "2025-06-12", "expire": "2025-12-28", "finaled": null, "bucket": "red", "ageDays": 372, "coordSource": "geocoded", "parcel": "503-48-525", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/72a9f1fb-f9b3-44fb-867a-847b45a963da", "source": "Maricopa County Permit Center", "contractor": "Empower Electric Solar", "licenseROC": "346621", "contractorPhone": "800-306-6953", "contractorEmail": "arizonapermits@empoweryourhome.com", "valuation": 20320, "systemKW": 5.0, "systemKWSource": "est-valuation", "battery": true, "batteryModel": "Tesla Powerwall", "owner": "HOWELL HEIDI", "ownerType": "Individual", "lastSold": "2023-01-01", "lastSoldPrice": 342500, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "30116 N 206TH AVE, WITTMANN, AZ 85361", "lotSize": 49600, "ownerOccupied": true, "isNew": true, "vesting": "HOWELL HEIDI", "isTrust": false, "leadNames": ["Heidi Howell"], "leadName": "Heidi Howell"},
+  {"id": "BLDR2500463", "address": "20546 W Arlington Dr Buckeye AZ 85326", "lat": 33.32805626715, "lng": -112.493270306146, "status": "withdrawn", "statusLabel": "Withdrawn", "issued": "2025-01-28", "applied": "2025-01-17", "expire": "2025-07-27", "finaled": null, "bucket": "red", "ageDays": 518, "coordSource": "geocoded", "parcel": "400-52-186D", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/8fc8c0c2-e1c5-4317-a0ba-a9d4b85cb907", "source": "Maricopa County Permit Center", "contractor": "Our World Energy", "licenseROC": null, "contractorPhone": "623-850-5700", "contractorEmail": "permits@ourworldenergy.com", "valuation": 7500, "systemKW": 4.0, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "RODNEY WIDIGER LIVING TRUST", "ownerType": "Trust", "lastSold": null, "lastSoldPrice": null, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "20546 W ARLINGTON, BUCKEYE, AZ 85326", "lotSize": 51619, "ownerOccupied": true, "isNew": true, "vesting": "RODNEY WIDIGER LIVING TRUST", "isTrust": true, "leadNames": ["Rodney Widiger"], "leadName": "Rodney Widiger"},
+  {"id": "BLDR2403419", "address": "31833 N Ash St Wittmann AZ 85361", "lat": 33.772978374629, "lng": -112.526265667996, "status": "withdrawn", "statusLabel": "Withdrawn", "issued": "2024-10-21", "applied": "2024-10-07", "expire": "2025-04-19", "finaled": null, "bucket": "red", "ageDays": 620, "coordSource": "geocoded", "parcel": "503-41-079", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM WITH MAIN SERVICE PANEL UPGRADE TO 225A SOLAR READY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/928102db-d66e-4dd4-abe4-41635c90a764", "source": "Maricopa County Permit Center", "contractor": "Owner-builder / DIY (no contractor on permit)", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 10659, "systemKW": 5.5, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "VIRAMONTES MARTIN GALAVZA/GRACIEL P", "ownerType": "Individual", "lastSold": "2016-08-01", "lastSoldPrice": 36000, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "4491 N KATIE CIR W, PRESCOTT VALLEY, AZ 86314", "lotSize": 8316, "ownerOccupied": false, "isNew": true, "vesting": "VIRAMONTES MARTIN GALAVZA/GRACIEL P", "isTrust": false, "leadNames": ["Martin Galavza Viramontes", "Graciel P Viramontes"], "leadName": "Martin Galavza & Graciel P Viramontes"},
+  {"id": "BLDR2503081", "address": "308 3rd Ave E Buckeye AZ 85326", "lat": 33.380020043524, "lng": -112.580762120234, "status": "withdrawn", "statusLabel": "Withdrawn", "issued": "2025-04-11", "applied": "2025-04-11", "expire": "2025-10-08", "finaled": null, "bucket": "red", "ageDays": 434, "coordSource": "geocoded", "parcel": "504-51-068", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED SOLAREDGE BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/b39bc3d9-bb23-47bb-8d8f-55271d1b207e", "source": "Maricopa County Permit Center", "contractor": "Freedom Forever Arizona", "licenseROC": null, "contractorPhone": "602-888-7196", "contractorEmail": "permitsarizona@freedomforever.com", "valuation": 35817, "systemKW": 13.0, "systemKWSource": "est-valuation", "battery": true, "batteryModel": "SolarEdge Battery", "owner": "GONZALEZ DAIAN/MEZA GUADALUPE", "ownerType": "Individual", "lastSold": "2022-07-01", "lastSoldPrice": 300000, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "308 3RD AVE E, BUCKEYE, AZ 85326", "lotSize": 6750, "ownerOccupied": true, "isNew": true, "vesting": "GONZALEZ DAIAN/MEZA GUADALUPE", "isTrust": false, "leadNames": ["Daian Gonzalez", "Guadalupe Meza"], "leadName": "Daian Gonzalez & Guadalupe Meza"},
+  {"id": "BLDR2403126", "address": "1039 N 359th Ave Tonopah AZ 85354", "lat": 33.458909258926, "lng": -112.824039735284, "status": "withdrawn", "statusLabel": "Withdrawn", "issued": null, "applied": "2024-09-27", "expire": null, "finaled": null, "bucket": "red", "ageDays": 630, "coordSource": "geocoded", "parcel": "506-40-132E", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/c0e6cc0f-740c-4c59-a93d-a76720569f47", "source": "Maricopa County Permit Center", "contractor": "Not issued \u2014 no contractor on public record", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 17178, "systemKW": 8.5, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "BLACK BARBARA", "ownerType": "Individual", "lastSold": null, "lastSoldPrice": null, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "1039 N 359TH AVE, TONOPAH, AZ 85354", "lotSize": 51941, "ownerOccupied": true, "isNew": true, "vesting": "BLACK BARBARA", "isTrust": false, "leadNames": ["Barbara Black"], "leadName": "Barbara Black"},
+  {"id": "BLDR2402806", "address": "38613 W Sherman St Tonopah AZ 85354", "lat": 33.43886062663, "lng": -112.883792059908, "status": "withdrawn", "statusLabel": "Withdrawn", "issued": "2024-09-18", "applied": "2024-09-17", "expire": "2025-03-17", "finaled": null, "bucket": "red", "ageDays": 640, "coordSource": "geocoded", "parcel": "506-44-098B", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/c3a3a14b-53a4-4e06-b148-fb40902885f0", "source": "Maricopa County Permit Center", "contractor": "Independent Solar", "licenseROC": null, "contractorPhone": "480-408-4986", "contractorEmail": "permitting@independentsolar.com", "valuation": 30573, "systemKW": 15.5, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "FANNIN ROBERT EUGENE", "ownerType": "Individual", "lastSold": null, "lastSoldPrice": null, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "38613 W SHERMAN RD, TONOPAH, AZ 85354", "lotSize": 43144, "ownerOccupied": true, "isNew": true, "vesting": "FANNIN ROBERT EUGENE", "isTrust": false, "leadNames": ["Robert Eugene Fannin"], "leadName": "Robert Eugene Fannin"},
+  {"id": "BLDR2500030", "address": "20538 W Arlington Rd Buckeye AZ 85326", "lat": 33.327051528416, "lng": -112.493289081609, "status": "withdrawn", "statusLabel": "Withdrawn", "issued": "2025-01-15", "applied": "2025-01-02", "expire": "2025-07-14", "finaled": null, "bucket": "red", "ageDays": 533, "coordSource": "geocoded", "parcel": "400-52-186C", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/c3e86ad0-7f08-490c-8d9c-0f4a740e30eb", "source": "Maricopa County Permit Center", "contractor": "Our World Energy", "licenseROC": null, "contractorPhone": "623-850-5700", "contractorEmail": "permits@ourworldenergy.com", "valuation": 7500, "systemKW": 4.0, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "HOLT FAMILY LIVING TRUST", "ownerType": "Trust", "lastSold": null, "lastSoldPrice": null, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "20538 W ARLINGTON RD, BUCKEYE, AZ 85326", "lotSize": 51175, "ownerOccupied": true, "isNew": true, "vesting": "HOLT FAMILY LIVING TRUST", "isTrust": true, "leadNames": ["Holt"], "leadName": "Holt"},
+  {"id": "BLDR2506138", "address": "469 Liesen Dr Morristown AZ 85342", "lat": 33.813925648021, "lng": -112.585286336292, "status": "expired", "statusLabel": "Expired", "issued": "2025-08-05", "applied": "2025-08-01", "expire": "2026-02-01", "finaled": null, "bucket": "red", "ageDays": 322, "coordSource": "geocoded", "parcel": "503-86-215A", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM WITH MAIN SERVICE PANEL UPGRADE TO 225A SOLAR READY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/4207ae7b-49e4-475f-acf7-470d74aca83e", "source": "Maricopa County Permit Center", "contractor": "Freedom Forever Arizona", "licenseROC": null, "contractorPhone": "602-888-7196", "contractorEmail": "permitsarizona@freedomforever.com", "valuation": 22294, "systemKW": 11.0, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "LOZANO ERICK/ANDREA", "ownerType": "Individual", "lastSold": "2026-02-01", "lastSoldPrice": 425430, "recentBuyer": true, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "469 LIESEN DR, MORRISTOWN, AZ 85342", "lotSize": 23936, "ownerOccupied": true, "isNew": true, "vesting": "LOZANO ERICK/ANDREA", "isTrust": false, "leadNames": ["Erick Lozano", "Andrea Lozano"], "leadName": "Erick & Andrea Lozano"},
+  {"id": "BLDR2505156", "address": "2030 S Tuthill Rd Buckeye AZ 85326", "lat": 33.428017670954, "lng": -112.497705674031, "status": "expired", "statusLabel": "Expired", "issued": "2025-07-01", "applied": "2025-06-27", "expire": "2025-12-28", "finaled": null, "bucket": "red", "ageDays": 357, "coordSource": "geocoded", "parcel": "502-47-945L", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM WHICH INCLUDES REDUCTION OF MAIN CIRCUIT BREAKER TO 175 AMPS // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/7998cfda-fd23-4da9-b160-784eca10e5eb", "source": "Maricopa County Permit Center", "contractor": "Freedom Forever Arizona", "licenseROC": null, "contractorPhone": "602-888-7196", "contractorEmail": "permitsarizona@freedomforever.com", "valuation": 12526, "systemKW": 6.5, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "BARBARA LOUISE DYER AND GARY GENE DYER REVOCABLE TRUST", "ownerType": "Trust", "lastSold": null, "lastSoldPrice": null, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "2030 S TUTHILL RD, BUCKEYE, AZ 85326", "lotSize": 47498, "ownerOccupied": true, "isNew": true, "vesting": "BARBARA LOUISE DYER AND GARY GENE DYER REVOCABLE TRUST", "isTrust": true, "leadNames": ["Barbara Dyer", "Gary Dyer"], "leadName": "Barbara & Gary Dyer"},
+  {"id": "BLDR2400832", "address": "30822 W Ardmore Rd Buckeye AZ 85326", "lat": 33.368323391009, "lng": -112.714637542476, "status": "withdrawn", "statusLabel": "Withdrawn", "issued": null, "applied": "2024-07-15", "expire": null, "finaled": null, "bucket": "red", "ageDays": 704, "coordSource": "geocoded", "parcel": "401-27-032K", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/cf34f03c-e72e-4c2e-85a7-8663e2575b8d", "source": "Maricopa County Permit Center", "contractor": "Not issued \u2014 no contractor on public record", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 86599, "systemKW": 43.5, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "SPARKS JESSE", "ownerType": "Individual", "lastSold": "2019-09-01", "lastSoldPrice": 165900, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "30822 W ARDMORE RD, BUCKEYE, AZ 85326", "lotSize": 50695, "ownerOccupied": true, "isNew": true, "vesting": "SPARKS JESSE", "isTrust": false, "leadNames": ["Jesse Sparks"], "leadName": "Jesse Sparks"},
+  {"id": "BLDR2405622", "address": "7632 S 350th Dr Tonopah AZ 85354", "lat": 33.376868783206, "lng": -112.806332378092, "status": "withdrawn", "statusLabel": "Withdrawn", "issued": "2025-01-07", "applied": "2024-12-19", "expire": "2025-07-06", "finaled": null, "bucket": "red", "ageDays": 547, "coordSource": "geocoded", "parcel": "401-42-991E", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/d1c18aa6-a2bb-45c9-8623-a1fd3b53537b", "source": "Maricopa County Permit Center", "contractor": "Freedom Forever Arizona", "licenseROC": "319879", "contractorPhone": "602-888-7196", "contractorEmail": "permitsarizona@freedomforever.com", "valuation": 31948, "systemKW": 16.0, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "ESCALANTE DAVID MAURICIO/RICO MELECIO VEDOY", "ownerType": "Individual", "lastSold": "2022-08-01", "lastSoldPrice": 345000, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "7632 S 350TH DR, TONOPAH, AZ 85354", "lotSize": 48144, "ownerOccupied": true, "isNew": true, "vesting": "ESCALANTE DAVID MAURICIO/RICO MELECIO VEDOY", "isTrust": false, "leadNames": ["David Mauricio Escalante", "Melecio Vedoy Rico"], "leadName": "David Mauricio Escalante & Melecio Vedoy Rico"},
+  {"id": "BLDR2500910", "address": "25235 W Bowker St Buckeye AZ 85326", "lat": 33.396142634282, "lng": -112.593015708305, "status": "withdrawn", "statusLabel": "Withdrawn", "issued": null, "applied": "2025-01-31", "expire": null, "finaled": null, "bucket": "red", "ageDays": 504, "coordSource": "geocoded", "parcel": "504-41-814", "description": "11.48kw Roof mounted pv system w/production meter and AC disco 1 SolarEdge Energy Bank (non-backup) battery", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/060c6cd7-b346-4b90-bd8b-c8ed9a4693f9", "source": "Maricopa County Permit Center", "contractor": "Not issued \u2014 no contractor on public record", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 29725, "systemKW": 11.48, "systemKWSource": "permit", "battery": true, "batteryModel": "SolarEdge Energy Bank", "owner": "SHERMAN JOHN", "ownerType": "Individual", "lastSold": "2024-10-01", "lastSoldPrice": 425990, "recentBuyer": false, "parcelType": null, "satelliteStatus": "verify", "satelliteNote": "", "mailingAddress": "25235 W BOWKER ST, BUCKEYE, AZ 85326", "lotSize": 6247, "ownerOccupied": true, "isNew": true, "vesting": "SHERMAN JOHN", "isTrust": false, "leadNames": ["John Sherman"], "leadName": "John Sherman"},
+  {"id": "BLDR2402651", "address": "6614 S 350th Dr Tonopah AZ 85354", "lat": 33.386369460908, "lng": -112.805681858587, "status": "withdrawn", "statusLabel": "Withdrawn", "issued": null, "applied": "2024-09-10", "expire": null, "finaled": null, "bucket": "red", "ageDays": 647, "coordSource": "geocoded", "parcel": "504-34-048", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/06eafe75-e666-4d8b-83b2-b1be6cab2a95", "source": "Maricopa County Permit Center", "contractor": "Not issued \u2014 no contractor on public record", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 36116, "systemKW": 18.0, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "STANLEY PHYLLIS J", "ownerType": "Individual", "lastSold": "2007-01-01", "lastSoldPrice": 143579, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "6614 S 350TH DR, TONOPAH, AZ 85354", "lotSize": 44040, "ownerOccupied": true, "isNew": true, "vesting": "STANLEY PHYLLIS J", "isTrust": false, "leadNames": ["Phyllis J Stanley"], "leadName": "Phyllis J Stanley"},
+  {"id": "BLDR2404437", "address": "30240 W Lower River Road Buckeye AZ 85326", "lat": 33.363750979008, "lng": -112.703299677327, "status": "withdrawn", "statusLabel": "Withdrawn", "issued": null, "applied": "2024-11-13", "expire": null, "finaled": null, "bucket": "red", "ageDays": 583, "coordSource": "geocoded", "parcel": "401-19-071L", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM WHICH INCLUDES REDUCTION OF MAIN CIRCUIT BREAKER TO 175 AMPS // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/0f2867e5-1748-44a2-b2ad-ab0d29008b8b", "source": "Maricopa County Permit Center", "contractor": "Not issued \u2014 no contractor on public record", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 25130, "systemKW": 12.5, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "SCHRODER LIVING TRUST", "ownerType": "Trust", "lastSold": null, "lastSoldPrice": null, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "30251 W LOWER RIVER RD, BUCKEYE, AZ 85326", "lotSize": 108990, "ownerOccupied": false, "isNew": true, "vesting": "SCHRODER LIVING TRUST", "isTrust": true, "leadNames": ["Schroder"], "leadName": "Schroder"},
+  {"id": "BLDR2500644", "address": "24506 W Quails Nest Ln Wittmann AZ 85361", "lat": 33.745264869065, "lng": -112.590391669697, "status": "expired", "statusLabel": "Expired", "issued": "2025-01-28", "applied": "2025-01-24", "expire": "2025-07-27", "finaled": null, "bucket": "red", "ageDays": 511, "coordSource": "geocoded", "parcel": "503-32-250", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/62eaa739-2f5c-442b-baa4-3a0ae9d76d94", "source": "Maricopa County Permit Center", "contractor": "Our World Energy", "licenseROC": null, "contractorPhone": "623-850-5700", "contractorEmail": "permits@ourworldenergy.com", "valuation": 20000, "systemKW": 10.0, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "BENJAMIN AND PAMELA LAMB REVOCABLE TRUST", "ownerType": "Trust", "lastSold": null, "lastSoldPrice": null, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "24506 W QUAILS NEST LN, WITTMANN, AZ 85361", "lotSize": 45121, "ownerOccupied": true, "isNew": true, "vesting": "BENJAMIN AND PAMELA LAMB REVOCABLE TRUST", "isTrust": true, "leadNames": ["Benjamin Lamb", "Pamela Lamb"], "leadName": "Benjamin & Pamela Lamb"},
+  {"id": "BLDR2502698", "address": "27127 N 239th Ave Wittmann AZ 85361", "lat": 33.729360752613, "lng": -112.576654736221, "status": "expired", "statusLabel": "Expired", "issued": "2025-04-07", "applied": "2025-03-31", "expire": "2025-10-04", "finaled": null, "bucket": "red", "ageDays": 445, "coordSource": "geocoded", "parcel": "503-30-043B", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM ON EXISTING MANUFACTURED HOME WITH MAIN SERVICE PANEL UPGRADE TO 225A SOLAR READY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/4d9ca8cd-e8a5-43b6-9038-a97878c371fb", "source": "Maricopa County Permit Center", "contractor": "Freedom Forever Arizona", "licenseROC": null, "contractorPhone": "602-888-7196", "contractorEmail": "permitsarizona@freedomforever.com", "valuation": 20563, "systemKW": 10.5, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "SAWYER CAROL LEE/SHANNON MARIE/CLIFTON JUSTIN ALLEN", "ownerType": "Individual", "lastSold": null, "lastSoldPrice": null, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "27127 N 239TH AVE, WITTMANN, AZ 85361", "lotSize": 37003, "ownerOccupied": true, "isNew": true, "vesting": "SAWYER CAROL LEE/SHANNON MARIE/CLIFTON JUSTIN ALLEN", "isTrust": false, "leadNames": ["Carol Lee Sawyer", "Marie Shannon", "Justin Allen Clifton"], "leadName": "Carol Lee Sawyer, Marie Shannon & Justin Allen Clifton"},
+  {"id": "BLDR2404930", "address": "11142 W Hidalgo Ave Tolleson AZ 85353", "lat": 33.394488926695, "lng": -112.29949805527, "status": "expired", "statusLabel": "Expired", "issued": "2024-11-26", "applied": "2024-11-25", "expire": "2025-05-25", "finaled": null, "bucket": "red", "ageDays": 571, "coordSource": "geocoded", "parcel": "101-43-076", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/ee9dffcd-0a1a-4dfa-80c9-47f2ccb40ddb", "source": "Maricopa County Permit Center", "contractor": "Owner-builder / DIY (no contractor on permit)", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 42179, "systemKW": 21.0, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "TAVIZON JESUS A/LUCIA", "ownerType": "Individual", "lastSold": "2023-06-01", "lastSoldPrice": 595000, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "11142 W HIDALGO AVE, TOLLESON, AZ 85353", "lotSize": 44915, "ownerOccupied": true, "isNew": true, "vesting": "TAVIZON JESUS A/LUCIA", "isTrust": false, "leadNames": ["Jesus A Tavizon", "Lucia Tavizon"], "leadName": "Jesus A & Lucia Tavizon"},
+  {"id": "BLDR2403440", "address": "1040 S 387th Ave Tonopah AZ 85354", "lat": 33.437075365073, "lng": -112.885976048599, "status": "expired", "statusLabel": "Expired", "issued": "2024-11-12", "applied": "2024-10-08", "expire": "2025-05-11", "finaled": null, "bucket": "red", "ageDays": 619, "coordSource": "geocoded", "parcel": "506-44-097S", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/c643ee71-ae5c-49b3-90e4-d3c18fc5ab62", "source": "Maricopa County Permit Center", "contractor": "Storm Pro Energy", "licenseROC": null, "contractorPhone": "480-577-7785", "contractorEmail": "info@stormproenergy.com", "valuation": 50000, "systemKW": 25.0, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "RHOADES ELIZABETH MURRAY", "ownerType": "Individual", "lastSold": null, "lastSoldPrice": null, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "1040 S 387TH AVE, TONOPAH, AZ 85354", "lotSize": 43799, "ownerOccupied": true, "isNew": true, "vesting": "RHOADES ELIZABETH MURRAY", "isTrust": false, "leadNames": ["Elizabeth Murray Rhoades"], "leadName": "Elizabeth Murray Rhoades"},
+  {"id": "BLDR2401787", "address": "9862 S 391st Ave Tonopah AZ 85354", "lat": 33.356109784616, "lng": -112.89679867816, "status": "expired", "statusLabel": "Expired", "issued": "2024-08-14", "applied": "2024-08-12", "expire": "2025-02-10", "finaled": null, "bucket": "red", "ageDays": 676, "coordSource": "geocoded", "parcel": "401-47-067K", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/9fe69cea-ad8f-4c7c-b4dc-90b229021872", "source": "Maricopa County Permit Center", "contractor": "Owner-builder / DIY (no contractor on permit)", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 21400, "systemKW": 10.5, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "MAUPIN STEVE/PENNY", "ownerType": "Individual", "lastSold": null, "lastSoldPrice": null, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "3505 N 327TH DR, TONOPAH, AZ 85354", "lotSize": 436694, "ownerOccupied": false, "isNew": true, "vesting": "MAUPIN STEVE/PENNY", "isTrust": false, "leadNames": ["Steve Maupin", "Penny Maupin"], "leadName": "Steve & Penny Maupin"},
+  {"id": "BLDR2405751", "address": "3759 N 439th Ave Tonopah AZ 85354", "lat": 33.490116593191, "lng": -112.996558245735, "status": "expired", "statusLabel": "Expired", "issued": "2024-12-27", "applied": "2024-12-26", "expire": "2025-06-25", "finaled": null, "bucket": "red", "ageDays": 540, "coordSource": "geocoded", "parcel": "506-33-648", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/5e51afdc-14e6-473a-86c4-721b45b3aad4", "source": "Maricopa County Permit Center", "contractor": "Freedom Forever Arizona", "licenseROC": "319879", "contractorPhone": "602-888-7196", "contractorEmail": "permitsarizona@freedomforever.com", "valuation": 27052, "systemKW": 13.5, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "LUQUE JOSE QUINTANA", "ownerType": "Individual", "lastSold": "2024-10-01", "lastSoldPrice": 406000, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "3759 N 439TH AVE, TONOPAH, AZ 85354", "lotSize": 54450, "ownerOccupied": true, "isNew": true, "vesting": "LUQUE JOSE QUINTANA", "isTrust": false, "leadNames": ["Jose Quintana Luque"], "leadName": "Jose Quintana Luque"},
+  {"id": "BLDR2510070", "address": "8612 S 204th Dr Buckeye AZ 85326", "lat": 33.368190412115, "lng": -112.489395687584, "status": "denied", "statusLabel": "Denied", "issued": null, "applied": "2025-12-18", "expire": null, "finaled": null, "bucket": "red", "ageDays": 183, "coordSource": "geocoded", "parcel": "400-09-004B", "description": "PV SOLAR + BATTERY", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/09a26c43-aac2-4e1b-b142-cfc4fc0bf3bb", "source": "Maricopa County Permit Center", "contractor": "Not issued \u2014 no contractor on public record", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 62203, "systemKW": 26.0, "systemKWSource": "est-valuation", "battery": true, "batteryModel": null, "owner": "BARKLEY-BOYLE FAMILY LIVING TRUST", "ownerType": "Trust", "lastSold": null, "lastSoldPrice": null, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "8612 S 204TH DR, BUCKEYE, AZ 85326", "lotSize": 87115, "ownerOccupied": true, "isNew": true, "vesting": "BARKLEY-BOYLE FAMILY LIVING TRUST", "isTrust": true, "leadNames": ["Barkley-Boyle"], "leadName": "Barkley-Boyle"},
+  {"id": "BLDR2508280", "address": "8606 W Kingman St Tolleson AZ 85353", "lat": 33.420390264793, "lng": -112.245145101214, "status": "denied", "statusLabel": "Denied", "issued": null, "applied": "2025-10-17", "expire": null, "finaled": null, "bucket": "red", "ageDays": 245, "coordSource": "geocoded", "parcel": "101-30-095", "description": "Installing Roof Mount Solar Panels", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/a94ec56a-6230-4489-ab1b-504ad2d0a02c", "source": "Maricopa County Permit Center", "contractor": "Not issued \u2014 no contractor on public record", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 28651, "systemKW": 14.5, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "DUWA MARSHALL A", "ownerType": "Individual", "lastSold": "2014-02-01", "lastSoldPrice": 157000, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "8606 W KINGMAN ST, TOLLESON, AZ 85353", "lotSize": 5416, "ownerOccupied": true, "isNew": true, "vesting": "DUWA MARSHALL A", "isTrust": false, "leadNames": ["Marshall A Duwa"], "leadName": "Marshall A Duwa"},
+  {"id": "BLDR2502115", "address": "19320 W Taylor St Buckeye AZ 85326", "lat": 33.453120716593, "lng": -112.475621203182, "status": "expired", "statusLabel": "Expired", "issued": "2025-03-17", "applied": "2025-03-12", "expire": "2025-09-13", "finaled": null, "bucket": "red", "ageDays": 464, "coordSource": "geocoded", "parcel": "502-36-056", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM WHICH INCLUDES REDUCTION OF MAIN CIRCUIT BREAKER TO 175 AMPS // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/e5a84426-a845-43f4-a9ea-25e367023ed3", "source": "Maricopa County Permit Center", "contractor": "Owner-builder / DIY (no contractor on permit)", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 15498, "systemKW": 7.5, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "GUERRERO JUAN CARLOS/MYRNA", "ownerType": "Individual", "lastSold": null, "lastSoldPrice": null, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "16211 W CORONADO RD, GOODYEAR, AZ 85395", "lotSize": 63023, "ownerOccupied": false, "isNew": true, "vesting": "GUERRERO JUAN CARLOS/MYRNA", "isTrust": false, "leadNames": ["Juan Carlos Guerrero", "Myrna Guerrero"], "leadName": "Juan Carlos & Myrna Guerrero"},
+  {"id": "BLDR2502716", "address": "22245 W Ocupado Dr Wittmann AZ 85361", "lat": 33.778291914509, "lng": -112.54146147172, "status": "expired", "statusLabel": "Expired", "issued": "2025-04-02", "applied": "2025-04-01", "expire": "2025-09-29", "finaled": null, "bucket": "red", "ageDays": 444, "coordSource": "geocoded", "parcel": "503-39-078", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/07fa8410-50e2-4559-aa44-446daf32c5fa", "source": "Maricopa County Permit Center", "contractor": "Independent Solar", "licenseROC": "191590", "contractorPhone": "480-408-4986", "contractorEmail": "permitting@independentsolar.com", "valuation": 43281, "systemKW": 21.5, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "DOMINGUEZ CRUZ ALFONSO/ABRIL M", "ownerType": "Individual", "lastSold": "2025-01-01", "lastSoldPrice": 515000, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "22245 W OCUPADO DR, WITTMANN, AZ 85361", "lotSize": 47382, "ownerOccupied": true, "isNew": true, "vesting": "DOMINGUEZ CRUZ ALFONSO/ABRIL M", "isTrust": false, "leadNames": ["Cruz Alfonso Dominguez", "Abril M Dominguez"], "leadName": "Cruz Alfonso & Abril M Dominguez"},
+  {"id": "BLDR2503908", "address": "23045 W Hopi St Buckeye AZ 85326", "lat": 33.429355632248, "lng": -112.546458930032, "status": "denied", "statusLabel": "Denied", "issued": null, "applied": "2025-05-12", "expire": null, "finaled": null, "bucket": "red", "ageDays": 403, "coordSource": "geocoded", "parcel": "504-63-526", "description": "ROOFTOP SOLAR PANEL INSTALLATION", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/d6ff11ee-268d-4a4b-9a23-c3fce93ec910", "source": "Maricopa County Permit Center", "contractor": "Not issued \u2014 no contractor on public record", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 25000, "systemKW": 12.5, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "SUAREZ AMELIA NUCAMENDI/GUMETA DIEGO NUCAMENDI", "ownerType": "Individual", "lastSold": "2024-12-01", "lastSoldPrice": 550000, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "23045 W HOPI ST, BUCKEYE, AZ 85326", "lotSize": 9417, "ownerOccupied": true, "isNew": true, "vesting": "SUAREZ AMELIA NUCAMENDI/GUMETA DIEGO NUCAMENDI", "isTrust": false, "leadNames": ["Amelia Nucamendi Suarez", "Diego Nucamendi Gumeta"], "leadName": "Amelia Nucamendi Suarez & Diego Nucamendi Gumeta"},
+  {"id": "BLDR2602684", "address": "11305 S 195th Dr Buckeye AZ 85326", "lat": 33.343921868756, "lng": -112.470397684942, "status": "denied", "statusLabel": "Denied", "issued": null, "applied": "2026-04-06", "expire": null, "finaled": null, "bucket": "red", "ageDays": 74, "coordSource": "geocoded", "parcel": "400-83-019", "description": "NEW PHOTOVOLTAIC FLAT ROOF MOUNTED SYSTEM - 11.440 KW DC/11.500 KW AC & ENERGY STORAGE SYSTEM - 13.5 KWH", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/28db1cae-6ab2-4ca5-a498-26b5cade51ce", "source": "Maricopa County Permit Center", "contractor": "Not issued \u2014 no contractor on public record", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 10000, "systemKW": 11.44, "systemKWSource": "permit", "battery": true, "batteryModel": null, "owner": "YANNONE ANTHONY W", "ownerType": "Individual", "lastSold": "2025-06-01", "lastSoldPrice": 980000, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "11305 S 195TH DR, BUCKEYE, AZ 85326", "lotSize": 44350, "ownerOccupied": true, "isNew": true, "vesting": "YANNONE ANTHONY W", "isTrust": false, "leadNames": ["Anthony W Yannone"], "leadName": "Anthony W Yannone"},
+  {"id": "BLDR2503249", "address": "29220 N 221st Ave Wittmann AZ 85361", "lat": 33.747957597369, "lng": -112.538613217202, "status": "expired", "statusLabel": "Expired", "issued": "2025-04-18", "applied": "2025-04-17", "expire": "2025-10-15", "finaled": null, "bucket": "red", "ageDays": 428, "coordSource": "geocoded", "parcel": "503-34-063A", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/1c1f2992-4eb1-425a-9278-3b1029b33112", "source": "Maricopa County Permit Center", "contractor": "Independent Solar", "licenseROC": "191590", "contractorPhone": "480-408-4986", "contractorEmail": "permitting@independentsolar.com", "valuation": 25164, "systemKW": 12.5, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "CHAPMAN HAYLEY", "ownerType": "Individual", "lastSold": "2020-09-01", "lastSoldPrice": 228000, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "29220 N 221ST AVE, WITTMANN, AZ 85361", "lotSize": 58246, "ownerOccupied": true, "isNew": true, "vesting": "CHAPMAN HAYLEY", "isTrust": false, "leadNames": ["Hayley Chapman"], "leadName": "Hayley Chapman"},
+  {"id": "BLDR2503626", "address": "308 3rd Ave E Buckeye AZ 85326", "lat": 33.380020043524, "lng": -112.580762120234, "status": "expired", "statusLabel": "Expired", "issued": "2025-05-09", "applied": "2025-05-01", "expire": "2025-11-05", "finaled": null, "bucket": "red", "ageDays": 414, "coordSource": "geocoded", "parcel": "504-51-068", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM //INTEGRATED SOLAREDGE BATTERY // WITH MAIN SERVICE PANEL UPGRADE TO 225A SOLAR READY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/0ef6384c-152a-4182-9a82-97d9ff4f628d", "source": "Maricopa County Permit Center", "contractor": "Our World Energy", "licenseROC": null, "contractorPhone": "623-850-5700", "contractorEmail": "permits@ourworldenergy.com", "valuation": 20400, "systemKW": 5.0, "systemKWSource": "est-valuation", "battery": true, "batteryModel": "SolarEdge Battery", "owner": "GONZALEZ DAIAN/MEZA GUADALUPE", "ownerType": "Individual", "lastSold": "2022-07-01", "lastSoldPrice": 300000, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "308 3RD AVE E, BUCKEYE, AZ 85326", "lotSize": 6750, "ownerOccupied": true, "isNew": true, "vesting": "GONZALEZ DAIAN/MEZA GUADALUPE", "isTrust": false, "leadNames": ["Daian Gonzalez", "Guadalupe Meza"], "leadName": "Daian Gonzalez & Guadalupe Meza"},
+  {"id": "BLDR2402200", "address": "37837 W Pierce St Tonopah AZ 85354", "lat": 33.454361322082, "lng": -112.867321033435, "status": "expired", "statusLabel": "Expired", "issued": "2024-08-28", "applied": "2024-08-26", "expire": "2025-02-24", "finaled": null, "bucket": "red", "ageDays": 662, "coordSource": "geocoded", "parcel": "506-40-278A", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/79992293-cd97-42fb-96a7-961bcdfad689", "source": "Maricopa County Permit Center", "contractor": "On Point Solar Power LLC", "licenseROC": null, "contractorPhone": "844-675-3325", "contractorEmail": "azpermits@onpointsolarpower.com", "valuation": 77000, "systemKW": 38.5, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "FLORES HENRY JR/JESSICA", "ownerType": "Individual", "lastSold": "2024-03-01", "lastSoldPrice": 434700, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "37837 W PIERCE ST, TONOPAH, AZ 85354", "lotSize": 50837, "ownerOccupied": true, "isNew": true, "vesting": "FLORES HENRY JR/JESSICA", "isTrust": false, "leadNames": ["Henry Flores", "Jessica Flores"], "leadName": "Henry & Jessica Flores"},
+  {"id": "BLDR2400508", "address": "19709 W Magnolia St Buckeye AZ 85326", "lat": 33.422769468009, "lng": -112.483649054767, "status": "expired", "statusLabel": "Expired", "issued": "2024-07-12", "applied": "2024-07-02", "expire": "2025-01-08", "finaled": null, "bucket": "red", "ageDays": 717, "coordSource": "geocoded", "parcel": "502-46-067", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/96eff7bc-4366-4abe-b40e-90a1b2b56d07", "source": "Maricopa County Permit Center", "contractor": "Owner-builder / DIY (no contractor on permit)", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 31080, "systemKW": 15.5, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "OLIVAS JESUS M/PAYAN GEORIGINA", "ownerType": "Individual", "lastSold": null, "lastSoldPrice": null, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "19709 W MAGNOLIA ST, BUCKEYE, AZ 85326", "lotSize": 47162, "ownerOccupied": true, "isNew": true, "vesting": "OLIVAS JESUS M/PAYAN GEORIGINA", "isTrust": false, "leadNames": ["Jesus M Olivas", "Georigina Payan"], "leadName": "Jesus M Olivas & Georigina Payan"},
+  {"id": "BLDR2400891", "address": "11115 W Hidalgo Ave Tolleson AZ 85353", "lat": 33.394038441309, "lng": -112.298395667364, "status": "expired", "statusLabel": "Expired", "issued": "2024-07-25", "applied": "2024-07-17", "expire": "2025-01-21", "finaled": null, "bucket": "red", "ageDays": 702, "coordSource": "geocoded", "parcel": "101-43-043", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/0b1ab481-78fa-42ca-902f-54fb266a58da", "source": "Maricopa County Permit Center", "contractor": "Owner-builder / DIY (no contractor on permit)", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 53125, "systemKW": 26.5, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "GALVAN MARTIN", "ownerType": "Individual", "lastSold": null, "lastSoldPrice": null, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "11115 W HIDALGO AVE, TOLLESON, AZ 85353", "lotSize": 43647, "ownerOccupied": true, "isNew": true, "vesting": "GALVAN MARTIN", "isTrust": false, "leadNames": ["Martin Galvan"], "leadName": "Martin Galvan"},
+  {"id": "BLDR2401873", "address": "23012 W Sierra Ridge Way Wittmann AZ 85361", "lat": 33.743123125165, "lng": -112.557411814368, "status": "expired", "statusLabel": "Expired", "issued": "2024-08-16", "applied": "2024-08-14", "expire": "2025-02-12", "finaled": null, "bucket": "red", "ageDays": 674, "coordSource": "geocoded", "parcel": "503-34-149", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/de433511-551b-4cd3-9aa5-0f2a57490f5d", "source": "Maricopa County Permit Center", "contractor": "Owner-builder / DIY (no contractor on permit)", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 25000, "systemKW": 12.5, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "RURKA ROBERT G/VICKI A", "ownerType": "Individual", "lastSold": "2006-02-01", "lastSoldPrice": 316054, "recentBuyer": false, "parcelType": null, "satelliteStatus": "verify", "satelliteNote": "", "mailingAddress": "23012 W SIERRA RIDGE WY, WITTMAN, AZ 85361", "lotSize": 44812, "ownerOccupied": true, "isNew": true, "vesting": "RURKA ROBERT G/VICKI A", "isTrust": false, "leadNames": ["Robert G Rurka", "Vicki A Rurka"], "leadName": "Robert G & Vicki A Rurka"},
+  {"id": "BLDR2400483", "address": "30640 W Dixileta Dr Wittmann AZ 85361", "lat": 33.753932092224, "lng": -112.724267343396, "status": "expired", "statusLabel": "Expired", "issued": "2024-07-03", "applied": "2024-07-01", "expire": "2024-12-30", "finaled": null, "bucket": "red", "ageDays": 718, "coordSource": "geocoded", "parcel": "503-91-403", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/0e1b1372-6935-465a-a7c9-d62cf03b0f3d", "source": "Maricopa County Permit Center", "contractor": "Owner-builder / DIY (no contractor on permit)", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 34016, "systemKW": 17.0, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "RAMOS VINNESA M", "ownerType": "Individual", "lastSold": null, "lastSoldPrice": null, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "30640 W DIXILETA, WITTMANN, AZ 85361", "lotSize": 179192, "ownerOccupied": true, "isNew": true, "vesting": "RAMOS VINNESA M", "isTrust": false, "leadNames": ["Vinnesa M Ramos"], "leadName": "Vinnesa M Ramos"},
+  {"id": "BLDR2403374", "address": "22420 W Pleasant Ln Wittmann AZ 85361", "lat": 33.783209660921, "lng": -112.545337599025, "status": "expired", "statusLabel": "Expired", "issued": "2024-10-16", "applied": "2024-10-04", "expire": "2025-04-14", "finaled": null, "bucket": "red", "ageDays": 623, "coordSource": "geocoded", "parcel": "503-17-186", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLE 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/d2233966-ed64-491e-b510-e67d1dae102e", "source": "Maricopa County Permit Center", "contractor": "Independent Solar", "licenseROC": null, "contractorPhone": "480-408-4986", "contractorEmail": "permitting@independentsolar.com", "valuation": 37285, "systemKW": 18.5, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "SPENCER HEATHER", "ownerType": "Individual", "lastSold": "2020-09-01", "lastSoldPrice": 191000, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "22420 W PLEASANT LN, WITTMANN, AZ 85361", "lotSize": 6600, "ownerOccupied": true, "isNew": true, "vesting": "SPENCER HEATHER", "isTrust": false, "leadNames": ["Heather Spencer"], "leadName": "Heather Spencer"},
+  {"id": "BLDR2602943", "address": "12856 S Zuni Rd Buckeye AZ 85326", "lat": 33.328415725067, "lng": -112.485267851728, "status": "fees-due", "statusLabel": "Fees Due", "issued": null, "applied": "2026-04-15", "expire": null, "finaled": null, "bucket": "yellow", "ageDays": 65, "coordSource": "geocoded", "parcel": "400-76-043", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/8815ee3c-5354-48f6-a590-f9dd562978f4", "source": "Maricopa County Permit Center", "contractor": "Not issued \u2014 no contractor on public record", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 10000, "systemKW": 5.0, "systemKWSource": "est-valuation", "battery": true, "batteryModel": "Tesla Powerwall", "owner": "REICHENBERGER ROBERT M JR/SANDRA D", "ownerType": "Individual", "lastSold": "2015-07-01", "lastSoldPrice": 184900, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "12856 S ZUNI RD, BUCKEYE, AZ 85326", "lotSize": 61286, "ownerOccupied": true, "isNew": true, "vesting": "REICHENBERGER ROBERT M JR/SANDRA D", "isTrust": false, "leadNames": ["Robert M Reichenberger", "Sandra D Reichenberger"], "leadName": "Robert M & Sandra D Reichenberger"},
+  {"id": "BLDR2604065", "address": "23530 W Estes Way Buckeye AZ 85326", "lat": 33.361525960901, "lng": -112.557536201811, "status": "in-review", "statusLabel": "In Review", "issued": "2026-05-29", "applied": "2026-05-22", "expire": "2026-11-25", "finaled": null, "bucket": "yellow", "ageDays": 28, "coordSource": "geocoded", "parcel": "400-43-009G", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/a61916d8-b0fa-4407-9714-86a386fb19f2", "source": "Maricopa County Permit Center", "contractor": "MD Home Solutions LLC", "licenseROC": "362858", "contractorPhone": "602-898-7181", "contractorEmail": "melissa@ignitecx.io", "valuation": 34662, "systemKW": 12.5, "systemKWSource": "est-valuation", "battery": true, "batteryModel": "Tesla Powerwall", "owner": "TINAJERO ARTURO ALFARO JR/BRAYAN ALFARO", "ownerType": "Individual", "lastSold": "2026-04-01", "lastSoldPrice": 501500, "recentBuyer": true, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "23530 W ESTES WAY, BUCKEYE, AZ 85326", "lotSize": 55629, "ownerOccupied": true, "isNew": true, "vesting": "TINAJERO ARTURO ALFARO JR/BRAYAN ALFARO", "isTrust": false, "leadNames": ["Arturo Alfaro Tinajero", "Alfaro Brayan"], "leadName": "Arturo Alfaro Tinajero & Alfaro Brayan"},
+  {"id": "BLDR2604283", "address": "35690 W Chipman Rd Tonopah AZ 85354", "lat": 33.403480613326, "lng": -112.818831975022, "status": "issued", "statusLabel": "Issued", "issued": "2026-06-08", "applied": "2026-05-29", "expire": "2026-12-05", "finaled": null, "bucket": "purple", "ageDays": 21, "coordSource": "geocoded", "parcel": "506-42-111", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/280f53a6-84ba-4e2c-a1ff-83b74c9edcdd", "source": "Maricopa County Permit Center", "contractor": "Independent Solar LLC", "licenseROC": null, "contractorPhone": "480-569-6903", "contractorEmail": "permitting@independentsolar.com", "valuation": 39689, "systemKW": 15.0, "systemKWSource": "est-valuation", "battery": true, "batteryModel": "Tesla Powerwall", "owner": "ROSALES NELLI/ACOSTA JOSE", "ownerType": "Individual", "lastSold": "2025-09-01", "lastSoldPrice": 445000, "recentBuyer": true, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "35690 W CHIPMAN RD, TONOPAH, AZ 85354", "lotSize": 50410, "ownerOccupied": true, "isNew": true, "vesting": "ROSALES NELLI/ACOSTA JOSE", "isTrust": false, "leadNames": ["Nelli Rosales", "Jose Acosta"], "leadName": "Nelli Rosales & Jose Acosta"},
+  {"id": "BLDR2604447", "address": "19813 W Brave Rd Buckeye AZ 85326", "lat": 33.327924461722, "lng": -112.477450805007, "status": "issued", "statusLabel": "Issued", "issued": "2026-06-12", "applied": "2026-06-04", "expire": "2026-12-09", "finaled": null, "bucket": "orange", "ageDays": 15, "coordSource": "geocoded", "parcel": "400-76-189", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/7ca2ff26-57a2-4703-a4c8-2e02c502d839", "source": "Maricopa County Permit Center", "contractor": "Empower Electric Solar", "licenseROC": "346621", "contractorPhone": "800-306-6953", "contractorEmail": "arizonapermits@empoweryourhome.com", "valuation": 30014, "systemKW": 10.0, "systemKWSource": "est-valuation", "battery": true, "batteryModel": "Tesla Powerwall", "owner": "POLING JAMES L", "ownerType": "Individual", "lastSold": "2002-07-01", "lastSoldPrice": 113000, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "19813 W BRAVE RD, BUCKEYE, AZ 85326", "lotSize": 46609, "ownerOccupied": true, "isNew": true, "vesting": "POLING JAMES L", "isTrust": false, "leadNames": ["James L Poling"], "leadName": "James L Poling"},
+  {"id": "BLDR2604514", "address": "20409 W Bradley Rd Wittmann AZ 85361", "lat": 33.752858202789, "lng": -112.501563528786, "status": "issued", "statusLabel": "Issued", "issued": "2026-06-15", "applied": "2026-06-08", "expire": "2026-12-12", "finaled": null, "bucket": "purple", "ageDays": 11, "coordSource": "geocoded", "parcel": "503-47-003F", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/41fe34dd-9e5a-485c-a319-017cfc5c7100", "source": "Maricopa County Permit Center", "contractor": "Owner-builder / DIY (no contractor on permit)", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 25000, "systemKW": 12.5, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "PENNINGTON TIMOTHY JOHN", "ownerType": "Individual", "lastSold": "2026-01-01", "lastSoldPrice": 501000, "recentBuyer": true, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "20409 W BRADLEY RD, WITTMANN, AZ 85361", "lotSize": 38548, "ownerOccupied": true, "isNew": true, "vesting": "PENNINGTON TIMOTHY JOHN", "isTrust": false, "leadNames": ["Timothy John Pennington"], "leadName": "Timothy John Pennington"},
+  {"id": "BLDR2604604", "address": "13227 S 193rd Ave Buckeye AZ 85326", "lat": 33.325960078894, "lng": -112.465167042085, "status": "in-review", "statusLabel": "In Review", "issued": null, "applied": "2026-06-10", "expire": null, "finaled": null, "bucket": "yellow", "ageDays": 9, "coordSource": "geocoded", "parcel": "400-53-114B", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/a8d4e098-f769-4a01-a3f3-674320250d94", "source": "Maricopa County Permit Center", "contractor": "Not issued \u2014 no contractor on public record", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 27294, "systemKW": 13.5, "systemKWSource": "est-valuation", "battery": false, "batteryModel": null, "owner": "RESENDEZ ENRIQUE A/CASTRO CINDY L", "ownerType": "Individual", "lastSold": "2026-04-01", "lastSoldPrice": 745000, "recentBuyer": true, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "13227 S 193RD AVE, BUCKEYE, AZ 85326", "lotSize": 54493, "ownerOccupied": true, "isNew": true, "vesting": "RESENDEZ ENRIQUE A/CASTRO CINDY L", "isTrust": false, "leadNames": ["Enrique A Resendez", "Cindy L Castro"], "leadName": "Enrique A Resendez & Cindy L Castro"},
+  {"id": "BLDR2604442", "address": "45647 N Us Highway 60 89 Morristown AZ 85342", "lat": 33.897181529887, "lng": -112.667983848953, "status": "issued", "statusLabel": "Issued", "issued": "2026-06-11", "applied": "2026-06-04", "expire": "2026-12-08", "finaled": null, "bucket": "orange", "ageDays": 15, "coordSource": "geocoded", "parcel": "503-24-003W", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // (2) SOLAREDGE BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/f681e292-8d1f-4fed-aa14-18e4dd596684", "source": "Maricopa County Permit Center", "contractor": "Owner-builder / DIY (no contractor on permit)", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 47224, "systemKW": 18.5, "systemKWSource": "est-valuation", "battery": true, "batteryModel": "SolarEdge Battery", "owner": "FULLER LOREN/CHERICE", "ownerType": "Individual", "lastSold": "2024-05-01", "lastSoldPrice": 725000, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "19530 BROKEN FENCE WAY, MONUMENT, CO 80132", "lotSize": 174501, "ownerOccupied": false, "isNew": true, "vesting": "FULLER LOREN/CHERICE", "isTrust": false, "leadNames": ["Loren Fuller", "Cherice Fuller"], "leadName": "Loren & Cherice Fuller"},
+  {"id": "BLDR2604835", "address": "588 N 350th Dr Tonopah AZ 85354", "lat": 33.453008943914, "lng": -112.807219602543, "status": "in-review", "statusLabel": "In Review", "issued": null, "applied": "2026-06-18", "expire": null, "finaled": null, "bucket": "yellow", "ageDays": 1, "coordSource": "geocoded", "parcel": "504-11-054A", "description": "8.80 kW Roof Mounted PV Solar + Tesla Storage EXPANSION System. Utilizing (2) x (N) Tesla Gateway 3 + (2) x (N) 125A-100A MLO BUL Panel", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/488c9603-0dd9-4e0b-bd82-6ab7f3b6b01e", "source": "Maricopa County Permit Center", "contractor": "Not issued \u2014 no contractor on public record", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 39620, "systemKW": 8.8, "systemKWSource": "permit", "battery": true, "batteryModel": null, "owner": "PASZEK JAREK/JESSICA", "ownerType": "Individual", "lastSold": "2025-01-01", "lastSoldPrice": 450000, "recentBuyer": false, "parcelType": null, "satelliteStatus": "clear", "satelliteNote": "", "mailingAddress": "588 N 350TH DR, TONOPAH, AZ 85354", "lotSize": 66931, "ownerOccupied": true, "isNew": true, "vesting": "PASZEK JAREK/JESSICA", "isTrust": false, "leadNames": ["Jarek Paszek", "Jessica Paszek"], "leadName": "Jarek & Jessica Paszek"},
+  {"id": "BLDR2603471", "address": "11305 S 195th Dr Buckeye AZ 85326", "lat": 33.343921868756, "lng": -112.470397684942, "status": "issued", "statusLabel": "Issued", "issued": "2026-06-19", "applied": "2026-05-04", "expire": "2026-12-16", "finaled": null, "bucket": "orange", "ageDays": 46, "coordSource": "geocoded", "parcel": "400-83-019", "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705", "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/e13f5aa5-d254-4698-b13f-273995642152", "source": "Maricopa County Permit Center", "contractor": "Owner-builder / DIY (no contractor on permit)", "licenseROC": null, "contractorPhone": null, "contractorEmail": null, "valuation": 10000, "systemKW": 5.0, "systemKWSource": "est-valuation", "battery": true, "batteryModel": "Tesla Powerwall", "owner": "YANNONE ANTHONY W", "ownerType": "Individual", "lastSold": "2025-06-01", "lastSoldPrice": 980000, "recentBuyer": false, "parcelType": null, "satelliteStatus": "verify", "satelliteNote": "", "mailingAddress": "11305 S 195TH DR, BUCKEYE, AZ 85326", "lotSize": 44350, "ownerOccupied": true, "isNew": true, "vesting": "YANNONE ANTHONY W", "isTrust": false, "leadNames": ["Anthony W Yannone"], "leadName": "Anthony W Yannone"}
+
+];
+
+const NEW_LEAD_IDS = new Set(['BLDR2504155','BLDR2502801','BLDR2500566','BLDR2402712','BLDR2502084','BLDR2400726','BLDR2506027','BLDR2504762','BLDR2500463','BLDR2403419','BLDR2503081','BLDR2403126','BLDR2402806','BLDR2500030','BLDR2506138','BLDR2505156','BLDR2400832','BLDR2405622','BLDR2500910','BLDR2402651','BLDR2404437','BLDR2500644','BLDR2502698','BLDR2404930','BLDR2403440','BLDR2401787','BLDR2405751','BLDR2510070','BLDR2508280','BLDR2502115','BLDR2502716','BLDR2503908','BLDR2602684','BLDR2503249','BLDR2503626','BLDR2402200','BLDR2400508','BLDR2400891','BLDR2401873','BLDR2400483','BLDR2403374','BLDR2602943','BLDR2604065','BLDR2604283','BLDR2604447','BLDR2604514','BLDR2604604','BLDR2604442','BLDR2604835','BLDR2603471']);
+
+/* ============================================================================
+   STATE MANAGEMENT
+   ============================================================================ */
+let state = {
+  permits: [],   // seeded from PERMITS_SEED, merged with GitHub state
+  lastSync: null,
+};
+let currentDetailId = null;
+let activeFilter = 'all';
+const markers = {};
+
+/* ── Merge logic: GitHub state wins on per-permit basis ── */
+function mergePermits(seed, saved) {
+  const savedById = {};
+  (saved || []).forEach(p => { savedById[p.id] = p; });
+  // Start with every seed permit, overlay saved fields
+  const merged = seed.map(s => ({ ...s, ...(savedById[s.id] || {}) }));
+  // Keep any saved-only permits that aren't in seed (shouldn't happen, but safe)
+  (saved || []).forEach(p => {
+    if (!seed.find(s => s.id === p.id)) merged.push(p);
+  });
+  return merged;
+}
+
+/* ── Outcome exclusion rules (from PROJECT-DIRECTION.md) ── */
+const REMOVE_OUTCOMES = new Set(['apptset', 'notint', 'hassolar', 'renter', 'soldu']);
+const SUPPRESS_30_DAYS = new Set(['notmoved']);
+// 'nih' / 'called' / blank → keep on route
+function isActiveRoute(p) {
+  if (!p.outcome) return true;
+  if (REMOVE_OUTCOMES.has(p.outcome)) return false;
+  if (SUPPRESS_30_DAYS.has(p.outcome) && p.outcomeDate) {
+    const days = (Date.now() - new Date(p.outcomeDate).getTime()) / 86400000;
+    if (days < 30) return false;
+  }
+  return true;
+}
+
+/* ============================================================================
+   LOCAL + GITHUB SYNC
+   ─ Saves to localStorage instantly on every change
+   ─ Pushes to GitHub ONLY when user taps the 💾 Update button
+   ─ NO 1.5s debounce auto-push (removed per project direction)
+   ============================================================================ */
+function saveLocal() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+  } catch (e) { console.warn('localStorage save failed', e); }
+}
+
+function scheduleSave() {
+  // Auto-push to GitHub disabled. localStorage saves instantly on every change,
+  // and GitHub push only fires when the user taps the 💾 Update button on a stop.
+  saveLocal();
+}
+
+function setSyncStatus(cls, msg) {
+  const bar = document.getElementById('sync-bar');
+  bar.className = '';
+  if (cls) bar.classList.add(cls);
+  bar.textContent = msg;
+}
+
+async function loadFromGitHub() {
+  setSyncStatus('', '⏳ Loading state from GitHub…');
+  try {
+    // Public-repo read via raw CDN — no auth needed, bypasses CORS-token issues
+    const rawUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${STATE_FILE}?t=${Date.now()}`;
+    const r = await fetch(rawUrl, { cache: 'no-store' });
+    if (r.status === 404) {
+      // No state file yet — fresh start
+      state.permits = mergePermits(PERMITS_SEED, []);
+      setSyncStatus('saved', '✓ Fresh state (no file yet)');
+      return;
+    }
+    if (!r.ok) throw new Error('GitHub raw ' + r.status);
+    const content = await r.json();
+    state.permits = mergePermits(PERMITS_SEED, content.permits || []);
+    state.lastSync = new Date().toISOString();
+    // Fetch current SHA separately (needed for PUT) — unauthenticated works on public repos
+    try {
+      const shaRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${STATE_FILE}?ref=${GITHUB_BRANCH}`, {
+        headers: { 'Accept': 'application/vnd.github.v3+json' }
+      });
+      if (shaRes.ok) {
+        const meta = await shaRes.json();
+        state._sha = meta.sha;
+      }
+    } catch {}
+    setSyncStatus('saved', `✓ Loaded ${state.permits.length} permits from GitHub`);
+    saveLocal();
+  } catch (e) {
+    console.error(e);
+    // Fall back to localStorage
+    try {
+      const local = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+      if (local && local.permits) {
+        state = local;
+        state.permits = mergePermits(PERMITS_SEED, local.permits);
+        setSyncStatus('error', '⚠ GitHub offline — using local cache');
+      } else {
+        state.permits = mergePermits(PERMITS_SEED, []);
+        setSyncStatus('error', '⚠ GitHub offline — starting fresh');
+      }
+    } catch {
+      state.permits = mergePermits(PERMITS_SEED, []);
+      setSyncStatus('error', '⚠ GitHub offline — starting fresh');
+    }
+  }
+}
+
+async function pushToGitHub() {
+  setSyncStatus('saving', '⬆ Pushing to GitHub…');
+  try {
+    const pat = getGitHubPAT();
+    if (!pat) {
+      setSyncStatus('error', '⚠ No sync passcode — saved locally only');
+      return;
+    }
+    const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${STATE_FILE}`;
+    const payload = {
+      permits: state.permits,
+      lastSync: new Date().toISOString(),
+      territory: TERRITORY.name,
+    };
+    const body = {
+      message: `Update ${STATE_FILE} — ${new Date().toLocaleString()}`,
+      content: btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2)))),
+      branch: GITHUB_BRANCH,
+    };
+    if (state._sha) body.sha = state._sha;
+    const r = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${pat}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+    if (r.status === 401 || r.status === 403) {
+      // Bad passcode — clear cache so rep can re-enter
+      localStorage.removeItem(PAT_LS_KEY);
+      setSyncStatus('error', '⚠ Sync passcode rejected — tap again to re-enter');
+      return;
+    }
+    if (!r.ok) {
+      const txt = await r.text();
+      throw new Error('GitHub PUT ' + r.status + ' ' + txt);
+    }
+    const data = await r.json();
+    state._sha = data.content.sha;
+    state.lastSync = new Date().toISOString();
+    setSyncStatus('saved', '✓ Saved to GitHub');
+    saveLocal();
+  } catch (e) {
+    console.error(e);
+    setSyncStatus('error', '⚠ Push failed — saved locally');
+  }
+}
+
+/* ============================================================================
+   MAP + MARKERS
+   ============================================================================ */
+let map;
+function initMap() {
+  map = L.map('map', { zoomControl: true }).setView(TERRITORY.center, TERRITORY.zoom);
+  // Light, Apple-Maps-style tile layer (CartoDB Voyager)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    maxZoom: 20,
+    attribution: '© OpenStreetMap © CARTO',
+    subdomains: 'abcd',
+  }).addTo(map);
+}
+
+function makePinIcon(bucket) {
+  const cls = 'bk-' + (bucket || 'red');
+  const glyphs = { green: 'I', yellow: '•', red: '!', final: '✓', sold: '$', nih: 'N', purple: 'kW' };
+  const glyph = glyphs[bucket] || '?';
+  return L.divIcon({
+    className: 'pin-wrap',
+    html: `<div class="pin ${cls}"><span class="pin-inner">${glyph}</span></div>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 28],
+  });
+}
+
+// Compute current age in days from the most recent meaningful date on the permit.
+// Falls back to p.ageDays (frozen at pull time) if no parseable date is present.
+function currentAgeDays(p) {
+  const src = p.issued || p.applied;
+  if (src) {
+    const d = new Date(src + 'T00:00:00');
+    if (!isNaN(d)) {
+      return Math.floor((Date.now() - d.getTime()) / 86400000);
+    }
+  }
+  return (typeof p.ageDays === 'number') ? p.ageDays : 0;
+}
+
+// Hot-window cutoff: issued permits older than this flip from green to red.
+const GREEN_MAX_AGE_DAYS = 60;
+
+function bucketForPin(p) {
+  // Outcome-driven pin recoloring
+  if (p.outcome === 'soldu') return 'sold';
+  if (p.outcome === 'notint' || p.outcome === 'renter' || p.outcome === 'hassolar' || p.outcome === 'apptset') return 'final';
+  if (p.outcome === 'nih') return 'nih';
+  // Verified system kW gets a purple pin so reps know we already have the size
+  if (p.systemKW) return 'purple';
+  // Status-driven hot-window rule: any issued permit within GREEN_MAX_AGE_DAYS of
+  // its issue date is green; older issued permits flip to red (homeowner likely
+  // already signed). This overrides seeded buckets because seed ageDays was
+  // originally computed from applied date, not issued date.
+  if (p.status === 'issued') {
+    return currentAgeDays(p) <= GREEN_MAX_AGE_DAYS ? 'green' : 'red';
+  }
+  return p.bucket || 'red';
+}
+
+function renderMarkers() {
+  // Clear existing
+  Object.values(markers).forEach(m => map.removeLayer(m));
+  Object.keys(markers).forEach(k => delete markers[k]);
+
+  const filtered = state.permits.filter(p => {
+    if (p.lat == null || p.lng == null) return false;
+    // "Hidden" bucket = not-interested leads. Show ONLY them in the Hidden view,
+    // and EXCLUDE them from every other view so Blake's list stays clean.
+    if (activeFilter === 'hidden') return p.outcome === 'notint';
+    if (p.outcome === 'notint') return false;
+    if (activeFilter === 'all') return true;
+    if (activeFilter === 'unknocked') return isActiveRoute(p) && !p.outcome;
+    if (activeFilter === 'green')  return bucketForPin(p) === 'green';
+    if (activeFilter === 'yellow') return bucketForPin(p) === 'yellow';
+    if (activeFilter === 'red')    return bucketForPin(p) === 'red';
+    if (activeFilter === 'purple') return !!p.systemKW;
+    if (activeFilter === 'nih') return p.outcome === 'nih';
+    if (activeFilter === 'called') return p.outcome === 'called';
+    if (activeFilter === 'newleads') return NEW_LEAD_IDS.has(p.id);
+    return true;
+  });
+
+  filtered.forEach(p => {
+    const m = L.marker([p.lat, p.lng], { icon: makePinIcon(bucketForPin(p)) })
+      .addTo(map)
+      .on('click', () => openDetail(p.id));
+    m.bindTooltip(p.address, { direction: 'top', offset: [0, -20], className: 'srusa-tooltip' });
+    markers[p.id] = m;
+  });
+
+  renderStats(filtered);
+}
+
+function renderStats(filtered) {
+  const total = state.permits.length;
+  const active = state.permits.filter(isActiveRoute).length;
+  const knocked = state.permits.filter(p => p.outcome).length;
+  const remaining = state.permits.filter(p => isActiveRoute(p) && !p.outcome).length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-active').textContent = active;
+  document.getElementById('stat-knocked').textContent = knocked;
+  document.getElementById('stat-remaining').textContent = remaining;
+}
+
+/* ============================================================================
+   DETAIL SHEET
+   ============================================================================ */
+function openDetail(id) {
+  const p = state.permits.find(x => x.id === id);
+  if (!p) return;
+  currentDetailId = id;
+  document.getElementById('d-addr').textContent = p.address || '—';
+  document.getElementById('d-meta').textContent =
+    `${TERRITORY.name} · ${p.source || 'Maricopa County'}`;
+  document.getElementById('d-status').textContent = (p.status || '—').toUpperCase();
+  document.getElementById('d-applied').textContent = p.applied || '—';
+  document.getElementById('d-issued').textContent = p.issued || '—';
+  document.getElementById('d-finaled').textContent = p.finaled || '—';
+  document.getElementById('d-contractor').textContent = p.contractor || '—';
+  document.getElementById('d-license').textContent = p.licenseROC || '—';
+
+  // Contractor contact (tappable tel:/mailto: for quick intel / recruit)
+  const phEl = document.getElementById('d-contractor-phone');
+  if (p.contractorPhone) {
+    phEl.innerHTML = `<a href="tel:${p.contractorPhone}" style="color:#60a5fa;text-decoration:none">${p.contractorPhone}</a>`;
+  } else { phEl.textContent = '—'; }
+  const emEl = document.getElementById('d-contractor-email');
+  if (p.contractorEmail) {
+    emEl.innerHTML = `<a href="mailto:${p.contractorEmail}" style="color:#60a5fa;text-decoration:none;font-size:11px">${p.contractorEmail}</a>`;
+  } else { emEl.textContent = '—'; }
+
+  // Permit valuation (actual $) + kW estimate derived from valuation
+  const valEl = document.getElementById('d-valuation');
+  const sizeEl = document.getElementById('d-size');
+  if (p.valuation) {
+    valEl.textContent = '$' + p.valuation.toLocaleString();
+    // Rough kW estimate: AZ residential solar valuation ~$1.80–$2.20/W installed-cost basis.
+    // If battery included, subtract ~$10k battery cost before dividing.
+    const batteryOffset = p.battery ? 10000 : 0;
+    const pvVal = Math.max(2000, p.valuation - batteryOffset);
+    const estKW = Math.round(pvVal / 2000 * 2) / 2;  // nearest 0.5 kW
+    if (p.systemKW) {
+      // Actual kW from portal/PDF — show in crisp white, not muted
+      sizeEl.textContent = `${p.systemKW} kW`;
+      sizeEl.style.color = '#e5e7eb';
+      sizeEl.style.fontStyle = 'normal';
+      sizeEl.style.fontWeight = '700';
+    } else {
+      // Derived from valuation — stays muted + italic per CSS above
+      sizeEl.textContent = `≈ ${estKW} kW`;
+    }
+  } else {
+    valEl.textContent = '—';
+    sizeEl.textContent = p.systemKW ? `${p.systemKW} kW` : '—';
+  }
+  const batteryEl = document.getElementById('d-battery');
+  if (p.battery) {
+    batteryEl.textContent = p.batteryModel || 'Yes';
+    batteryEl.className = 'v battery-yes';
+  } else if (p.battery === false) {
+    batteryEl.textContent = 'No';
+    batteryEl.className = 'v battery-no';
+  } else {
+    batteryEl.textContent = '—';
+    batteryEl.className = 'v';
+  }
+  const lead = p.leadName || p.vesting || p.owner || '—';
+  document.getElementById('d-owner').textContent = lead;
+  document.getElementById('d-leadname').textContent = lead;
+  const tagsEl = document.getElementById('d-leadtags');
+  let tags = '';
+  if (NEW_LEAD_IDS.has(p.id)) tags += '<span style="background:#0d2e2e;color:#5eead4;border:1px solid #134e4a;border-radius:5px;padding:1px 6px;margin-right:4px;">\ud83c\udd95 NEW</span>';
+  if (p.isTrust) tags += '<span style="background:#1e1b4b;color:#a5b4fc;border:1px solid #312e81;border-radius:5px;padding:1px 6px;margin-right:4px;">IN TRUST</span>';
+  if (p.ownerOccupied === false) tags += '<span style="background:#3a2a0d;color:#fbbf24;border:1px solid #5c3d0a;border-radius:5px;padding:1px 6px;margin-right:4px;">ABSENTEE</span>';
+  if (p.recentBuyer) tags += '<span style="background:#2e0d2e;color:#f0abfc;border:1px solid #5c0a5c;border-radius:5px;padding:1px 6px;">RECENT BUYER</span>';
+  tagsEl.innerHTML = tags;
+  const vEl = document.getElementById('d-vesting');
+  if (vEl) {
+    vEl.textContent = p.vesting || '—';
+    document.getElementById('d-vesting-type').textContent = p.ownerType ? ('Held as: ' + p.ownerType) : '';
+  }
+
+  // Owner type (flag Trust / LLC)
+  const otEl = document.getElementById('d-owner-type');
+  if (p.ownerType === 'Trust')      { otEl.innerHTML = '🏛 <span style="color:#c4b5fd">Trust</span>'; }
+  else if (p.ownerType === 'LLC')   { otEl.innerHTML = '🏢 <span style="color:#a78bfa">LLC</span>'; }
+  else if (p.ownerType)             { otEl.textContent = p.ownerType; }
+  else                              { otEl.textContent = '—'; }
+
+  // Last sold + recent buyer badge
+  const lsEl = document.getElementById('d-last-sold');
+  if (p.lastSold) {
+    const price = p.lastSoldPrice ? '$' + p.lastSoldPrice.toLocaleString() : '';
+    const fire = p.recentBuyer ? ' 🔥' : '';
+    lsEl.innerHTML = p.lastSold + (price ? ' · ' + price : '') + fire;
+    if (p.recentBuyer) lsEl.style.color = '#fbbf24';
+  } else {
+    lsEl.textContent = '—';
+    lsEl.style.color = '';
+  }
+
+  document.getElementById('d-parcel').textContent = p.parcel || '—';
+  document.getElementById('d-mailing').textContent = p.mailingAddress || '—';
+  const occEl = document.getElementById('d-occupied');
+  if (p.ownerOccupied === false) { occEl.textContent = 'No — ABSENTEE owner'; occEl.style.color = '#f59e0b'; }
+  else if (p.ownerOccupied === true) { occEl.textContent = 'Yes'; occEl.style.color = '#22c55e'; }
+  else { occEl.textContent = '—'; occEl.style.color = ''; }
+  document.getElementById('d-lot').textContent = p.lotSize ? (p.lotSize.toLocaleString()+' sq ft') : '—';
+
+  // Parcel type (flag Mobile Home)
+  const ptEl = document.getElementById('d-parcel-type');
+  if (p.parcelType === 'Mobile Home') { ptEl.innerHTML = '🏠 Mobile / Manufactured'; ptEl.style.color = '#ffa726'; }
+  else if (p.parcelType)              { ptEl.textContent = p.parcelType; ptEl.style.color = ''; }
+  else                                { ptEl.textContent = '—'; ptEl.style.color = ''; }
+
+  // Satellite check status
+  const satEl = document.getElementById('d-sat');
+  const satNoteEl = document.getElementById('d-sat-note');
+  if (p.satelliteStatus === 'clear') {
+    satEl.innerHTML = '<span style="color:#66bb6a">✓ Roof clear</span>';
+    satNoteEl.style.display = 'none';
+  } else if (p.satelliteStatus === 'verify') {
+    satEl.innerHTML = '<span style="color:#ffa726">🟡 Verify at door</span>';
+    satNoteEl.textContent = p.satelliteNote || 'Satellite imagery may predate construction';
+    satNoteEl.style.display = 'block';
+  } else if (p.satelliteStatus === 'panels') {
+    satEl.innerHTML = '<span style="color:#f87171">🔴 Panels detected — SKIP</span>';
+    satNoteEl.textContent = p.satelliteNote || 'Already installed';
+    satNoteEl.style.display = 'block';
+  } else {
+    satEl.textContent = '—';
+    satNoteEl.style.display = 'none';
+  }
+
+  document.getElementById('d-description').textContent = p.description || '—';
+
+  // Map action links (address for Apple Maps, lat/lng for Google satellite)
+  const addrEnc = encodeURIComponent(p.address || '');
+  document.getElementById('d-apple').href = `https://maps.apple.com/?q=${addrEnc}&t=k`;
+  document.getElementById('d-gsat').href = `https://www.google.com/maps/@${p.lat},${p.lng},20z/data=!3m1!1e3`;
+
+  document.getElementById('d-notes').value = p.notes || '';
+
+  // Outcome buttons
+  document.querySelectorAll('.obtn').forEach(b => {
+    b.classList.toggle('active', b.dataset.outcome === p.outcome);
+    b.classList.toggle(b.dataset.outcome, b.dataset.outcome === p.outcome);
+  });
+
+  document.getElementById('detail').classList.add('open');
+}
+
+function closeDetail() {
+  // Belt-and-suspenders: flush any pending notes to state before tearing down.
+  flushNotesToState();
+  saveLocal();
+  currentDetailId = null;
+  document.getElementById('detail').classList.remove('open');
+  renderMarkers(); // refresh pins so dispositioned leads disappear / change color after close
+}
+
+/* ── Outcome button toggling (updates state in memory, not pushed until Update) ── */
+document.querySelectorAll('.obtn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (!currentDetailId) return;
+    const outcome = btn.dataset.outcome;
+    const p = state.permits.find(x => x.id === currentDetailId);
+    if (!p) return;
+    if (p.outcome === outcome) {
+      p.outcome = null;
+      p.outcomeDate = null;
+    } else {
+      p.outcome = outcome;
+      p.outcomeDate = new Date().toISOString();
+    }
+    // Update visual state of all outcome buttons
+    document.querySelectorAll('.obtn').forEach(b => {
+      b.classList.remove('active');
+      b.classList.remove(b.dataset.outcome);
+    });
+    if (p.outcome) {
+      btn.classList.add('active');
+      btn.classList.add(p.outcome);
+    }
+    scheduleSave(); // localStorage only — pin re-renders on detail close
+  });
+});
+
+/* ── Notes save on every keystroke + on blur (localStorage only, no GitHub push) ──
+   Fires on every character typed so nothing is lost if the rep accidentally
+   closes the sheet, backgrounds the browser, or the phone restarts mid-note.
+   The debounce keeps localStorage writes cheap. */
+let _notesSaveTimer = null;
+function flushNotesToState() {
+  if (!currentDetailId) return;
+  const p = state.permits.find(x => x.id === currentDetailId);
+  if (!p) return;
+  p.notes = document.getElementById('d-notes').value;
+}
+document.getElementById('d-notes').addEventListener('input', () => {
+  flushNotesToState();
+  clearTimeout(_notesSaveTimer);
+  _notesSaveTimer = setTimeout(() => scheduleSave(), 400);
+});
+document.getElementById('d-notes').addEventListener('blur', () => {
+  flushNotesToState();
+  scheduleSave();
+});
+
+/* ── 💾 Update button: this is the ONLY thing that pushes to GitHub ── */
+async function saveAndPush() {
+  if (!currentDetailId) return;
+  const btn = document.getElementById('update-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  // Make sure current notes are flushed to state
+  const p = state.permits.find(x => x.id === currentDetailId);
+  if (p) p.notes = document.getElementById('d-notes').value;
+  saveLocal();
+  await pushToGitHub();
+  btn.disabled = false;
+  btn.textContent = '💾 Update';
+  renderMarkers();
+  closeDetail();
+}
+
+/* ============================================================================
+   FILTERS
+   ============================================================================ */
+document.getElementById('filters').addEventListener('click', (e) => {
+  const b = e.target.closest('.fchip');
+  if (!b) return;
+  document.querySelectorAll('.fchip').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  activeFilter = b.dataset.filter;
+  renderMarkers();
+});
+
+/* ============================================================================
+   EMPTY STATE (shown when PERMITS_SEED is empty)
+   ============================================================================ */
+function maybeRenderEmptyState() {
+  if (state.permits.length === 0) {
+    const mapEl = document.getElementById('map');
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position: absolute; inset: 0; background: rgba(15,17,23,0.95); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 20px;';
+    overlay.innerHTML = `
+      <div class="empty-state" style="max-width: 400px;">
+        <h3>🏜 No permits loaded yet</h3>
+        <p>Pull solar permits from the <strong>Maricopa County Permit Center</strong> and add them to <code>PERMITS_SEED</code> in this file, then reload.</p>
+        <p style="margin-top: 12px; font-size: 11px;">Coverage: 85354 Tonopah · 85322 Arlington · 85326 Buckeye · 85361 Wittmann · 85342 Morristown.</p>
+        <p style="margin-top: 12px; font-size: 11px;">Hard rules: skip finaled permits, satellite-check roof before adding, cross-reference <code>tonopah-permit-state.json</code>.</p>
+      </div>
+    `;
+    mapEl.style.position = 'relative';
+    mapEl.appendChild(overlay);
+  }
+}
+
+/* ============================================================================
+   BOOT
+   ============================================================================ */
+(async function boot() {
+  initMap();
+  // Try local cache first for instant render, then reconcile with GitHub
+  try {
+    const local = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+    if (local && local.permits) {
+      state = local;
+      state.permits = mergePermits(PERMITS_SEED, local.permits);
+      renderMarkers();
+      setSyncStatus('', '↻ Local cache loaded — syncing…');
+    }
+  } catch {}
+  await loadFromGitHub();
+  renderMarkers();
+  maybeRenderEmptyState();
+})();
+</script>
+</body>
+</html>
