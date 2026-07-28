@@ -725,7 +725,8 @@
       "parcelType": "Mobile Home",
       "satelliteStatus": "verify",
       "satelliteNote": "",
-      "isNew": false
+      "isNew": false,
+      "notes": ""
     },
     {
       "id": "BLDR2603461",
@@ -897,7 +898,10 @@
         "Anita Bradbury",
         "Christian S Soberanis"
       ],
-      "leadName": "Juan Parra Gamez, Anita Bradbury & Christian S Soberanis"
+      "leadName": "Juan Parra Gamez, Anita Bradbury & Christian S Soberanis",
+      "outcome": "hassolar",
+      "outcomeDate": "2026-07-28T22:00:53.919Z",
+      "notes": ""
     },
     {
       "id": "BLDR2500566",
@@ -1407,7 +1411,8 @@
       "leadNames": [
         "Robert Eugene Fannin"
       ],
-      "leadName": "Robert Eugene Fannin"
+      "leadName": "Robert Eugene Fannin",
+      "notes": ""
     },
     {
       "id": "BLDR2500030",
@@ -1966,7 +1971,8 @@
       "leadNames": [
         "Elizabeth Murray Rhoades"
       ],
-      "leadName": "Elizabeth Murray Rhoades"
+      "leadName": "Elizabeth Murray Rhoades",
+      "notes": ""
     },
     {
       "id": "BLDR2401787",
@@ -3469,6 +3475,6 @@
       "notes": ""
     }
   ],
-  "lastSync": "2026-07-28T21:59:09.789Z",
+  "lastSync": "2026-07-28T22:00:54.919Z",
   "territory": "Tonopah AZ"
 }
