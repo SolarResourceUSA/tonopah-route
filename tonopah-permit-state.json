@@ -109,7 +109,8 @@
       "parcelType": "Mobile Home",
       "satelliteStatus": "verify",
       "satelliteNote": "",
-      "isNew": false
+      "isNew": false,
+      "notes": ""
     },
     {
       "id": "BLDR2600600",
@@ -2028,7 +2029,8 @@
         "Steve Maupin",
         "Penny Maupin"
       ],
-      "leadName": "Steve & Penny Maupin"
+      "leadName": "Steve & Penny Maupin",
+      "notes": ""
     },
     {
       "id": "BLDR2405751",
@@ -3015,7 +3017,8 @@
       ],
       "vesting": "SALINAS-PEREZ ANTONIO",
       "isTrust": false,
-      "isNew": true
+      "isNew": true,
+      "notes": ""
     },
     {
       "id": "BLDR2604554",
@@ -3202,7 +3205,10 @@
       ],
       "vesting": "RODRIGUEZ EDUARDO GABINO LOYOLA",
       "isTrust": false,
-      "isNew": true
+      "isNew": true,
+      "outcome": "soldu",
+      "outcomeDate": "2026-07-28T22:05:51.130Z",
+      "notes": ""
     },
     {
       "id": "BLDR2605431",
@@ -3248,7 +3254,8 @@
       ],
       "vesting": "DIVIZIO MICHAELEEN D",
       "isTrust": false,
-      "isNew": true
+      "isNew": true,
+      "notes": ""
     },
     {
       "id": "BLDR2605494",
@@ -3435,7 +3442,8 @@
       ],
       "vesting": "MUNOZ BRYAN TORES/GARCIA KIMBERLY",
       "isTrust": false,
-      "isNew": true
+      "isNew": true,
+      "notes": ""
     },
     {
       "id": "BLDR2605747",
@@ -3488,6 +3496,6 @@
       "notes": ""
     }
   ],
-  "lastSync": "2026-07-28T22:02:57.572Z",
+  "lastSync": "2026-07-28T22:05:52.363Z",
   "territory": "Tonopah AZ"
 }
