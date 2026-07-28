@@ -1648,7 +1648,10 @@
         "David Mauricio Escalante",
         "Melecio Vedoy Rico"
       ],
-      "leadName": "David Mauricio Escalante & Melecio Vedoy Rico"
+      "leadName": "David Mauricio Escalante & Melecio Vedoy Rico",
+      "outcome": "hassolar",
+      "outcomeDate": "2026-07-28T22:02:21.419Z",
+      "notes": ""
     },
     {
       "id": "BLDR2500910",
@@ -3479,6 +3482,6 @@
       "notes": ""
     }
   ],
-  "lastSync": "2026-07-28T22:01:53.387Z",
+  "lastSync": "2026-07-28T22:02:22.420Z",
   "territory": "Tonopah AZ"
 }
