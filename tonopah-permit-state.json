@@ -1743,7 +1743,10 @@
       "leadNames": [
         "Phyllis J Stanley"
       ],
-      "leadName": "Phyllis J Stanley"
+      "leadName": "Phyllis J Stanley",
+      "outcome": "hassolar",
+      "outcomeDate": "2026-07-28T22:02:40.697Z",
+      "notes": ""
     },
     {
       "id": "BLDR2404437",
@@ -3482,6 +3485,6 @@
       "notes": ""
     }
   ],
-  "lastSync": "2026-07-28T22:02:22.420Z",
+  "lastSync": "2026-07-28T22:02:41.333Z",
   "territory": "Tonopah AZ"
 }
