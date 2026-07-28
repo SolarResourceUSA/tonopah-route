@@ -2478,7 +2478,10 @@
         "Henry Flores",
         "Jessica Flores"
       ],
-      "leadName": "Henry & Jessica Flores"
+      "leadName": "Henry & Jessica Flores",
+      "outcome": "notint",
+      "outcomeDate": "2026-07-28T21:59:08.939Z",
+      "notes": ""
     },
     {
       "id": "BLDR2400508",
@@ -3466,6 +3469,6 @@
       "notes": ""
     }
   ],
-  "lastSync": "2026-07-28T21:58:50.899Z",
+  "lastSync": "2026-07-28T21:59:09.789Z",
   "territory": "Tonopah AZ"
 }
