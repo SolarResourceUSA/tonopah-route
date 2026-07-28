@@ -850,7 +850,10 @@
       "leadNames": [
         "Joseph W Pinkley"
       ],
-      "leadName": "Joseph W Pinkley"
+      "leadName": "Joseph W Pinkley",
+      "outcome": "hassolar",
+      "outcomeDate": "2026-07-28T22:01:52.118Z",
+      "notes": ""
     },
     {
       "id": "BLDR2502801",
@@ -3282,7 +3285,8 @@
       ],
       "vesting": "BRAVO JAIME CRUZ TORRES",
       "isTrust": false,
-      "isNew": true
+      "isNew": true,
+      "notes": ""
     },
     {
       "id": "BLDR2605498",
@@ -3475,6 +3479,6 @@
       "notes": ""
     }
   ],
-  "lastSync": "2026-07-28T22:00:54.919Z",
+  "lastSync": "2026-07-28T22:01:53.387Z",
   "territory": "Tonopah AZ"
 }
