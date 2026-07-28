@@ -34,7 +34,10 @@
       "parcelType": "Land",
       "satelliteStatus": "verify",
       "satelliteNote": "",
-      "isNew": false
+      "isNew": false,
+      "outcome": "hassolar",
+      "outcomeDate": "2026-07-28T21:58:25.936Z",
+      "notes": ""
     },
     {
       "id": "BLDR2600453",
@@ -3460,6 +3463,6 @@
       "notes": ""
     }
   ],
-  "lastSync": "2026-07-28T21:57:51.025Z",
+  "lastSync": "2026-07-28T21:58:27.305Z",
   "territory": "Tonopah AZ"
 }
