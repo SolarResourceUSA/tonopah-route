@@ -650,7 +650,10 @@
       "parcelType": "Mobile Home",
       "satelliteStatus": "clear",
       "satelliteNote": "Manufactured home with carport, no panels",
-      "isNew": false
+      "isNew": false,
+      "outcome": "hassolar",
+      "outcomeDate": "2026-07-28T21:58:49.831Z",
+      "notes": ""
     },
     {
       "id": "BLDR2600204",
@@ -3463,6 +3466,6 @@
       "notes": ""
     }
   ],
-  "lastSync": "2026-07-28T21:58:27.305Z",
+  "lastSync": "2026-07-28T21:58:50.899Z",
   "territory": "Tonopah AZ"
 }
