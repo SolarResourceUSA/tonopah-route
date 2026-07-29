@@ -1395,7 +1395,9 @@
         "Barbara Black"
       ],
       "leadName": "Barbara Black",
-      "notes": ""
+      "notes": "",
+      "outcome": "hassolar",
+      "outcomeDate": "2026-07-29T22:31:39.125Z"
     },
     {
       "id": "BLDR2402806",
@@ -3554,6 +3556,6 @@
       "notes": ""
     }
   ],
-  "lastSync": "2026-07-29T22:31:19.017Z",
+  "lastSync": "2026-07-29T22:31:40.160Z",
   "territory": "Tonopah AZ"
 }
