@@ -3171,7 +3171,9 @@
       "vesting": "KERR JUSTIN/CONNOR-KERR SARAH",
       "isTrust": false,
       "isNew": true,
-      "notes": ""
+      "notes": "",
+      "outcome": "soldu",
+      "outcomeDate": "2026-07-29T23:34:08.368Z"
     },
     {
       "id": "BLDR2604856",
@@ -3562,6 +3564,6 @@
       "notes": ""
     }
   ],
-  "lastSync": "2026-07-29T23:20:06.378Z",
+  "lastSync": "2026-07-29T23:34:09.216Z",
   "territory": "Tonopah AZ"
 }
