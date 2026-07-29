@@ -73,7 +73,8 @@
       "parcelType": "Land",
       "satelliteStatus": "verify",
       "satelliteNote": "Assessor lists parcel as Land; satellite shows vacant lot — house likely built after imagery",
-      "isNew": false
+      "isNew": false,
+      "notes": ""
     },
     {
       "id": "BLDR2509583",
@@ -146,7 +147,8 @@
       "parcelType": "Land",
       "satelliteStatus": "verify",
       "satelliteNote": "Assessor lists parcel as Land; satellite shows vacant lot — house likely built after imagery",
-      "isNew": false
+      "isNew": false,
+      "notes": ""
     },
     {
       "id": "BLDR2509950",
@@ -182,7 +184,8 @@
       "parcelType": "Residential",
       "satelliteStatus": "verify",
       "satelliteNote": "",
-      "isNew": false
+      "isNew": false,
+      "notes": ""
     },
     {
       "id": "BLDR2600845",
@@ -218,7 +221,8 @@
       "parcelType": "Mobile Home",
       "satelliteStatus": "verify",
       "satelliteNote": "",
-      "isNew": false
+      "isNew": false,
+      "notes": ""
     },
     {
       "id": "BLDR2509106",
@@ -254,7 +258,8 @@
       "parcelType": "Residential",
       "satelliteStatus": "verify",
       "satelliteNote": "",
-      "isNew": false
+      "isNew": false,
+      "notes": ""
     },
     {
       "id": "BLDR2509990",
@@ -327,7 +332,8 @@
       "parcelType": "Mobile Home",
       "satelliteStatus": "verify",
       "satelliteNote": "",
-      "isNew": false
+      "isNew": false,
+      "notes": ""
     },
     {
       "id": "BLDR2601941",
@@ -363,7 +369,8 @@
       "parcelType": "Residential",
       "satelliteStatus": "verify",
       "satelliteNote": "",
-      "isNew": false
+      "isNew": false,
+      "notes": ""
     },
     {
       "id": "BLDR2506917",
@@ -399,7 +406,8 @@
       "parcelType": "Residential",
       "satelliteStatus": "verify",
       "satelliteNote": "",
-      "isNew": false
+      "isNew": false,
+      "notes": ""
     },
     {
       "id": "BLDR2506807",
@@ -435,7 +443,8 @@
       "parcelType": "Residential",
       "satelliteStatus": "verify",
       "satelliteNote": "",
-      "isNew": false
+      "isNew": false,
+      "notes": ""
     },
     {
       "id": "BLDR2600318",
@@ -471,7 +480,8 @@
       "parcelType": "Residential",
       "satelliteStatus": "clear",
       "satelliteNote": "Residence with equestrian ring, no panels",
-      "isNew": false
+      "isNew": false,
+      "notes": ""
     },
     {
       "id": "BLDR2600061",
@@ -507,7 +517,8 @@
       "parcelType": "Land",
       "satelliteStatus": "clear",
       "satelliteNote": "Dark-roof residence, no panels",
-      "isNew": false
+      "isNew": false,
+      "notes": ""
     },
     {
       "id": "BLDR2601382",
@@ -543,7 +554,8 @@
       "parcelType": "Mobile Home",
       "satelliteStatus": "verify",
       "satelliteNote": "",
-      "isNew": false
+      "isNew": false,
+      "notes": ""
     },
     {
       "id": "BLDR2509075",
@@ -579,7 +591,8 @@
       "parcelType": "Residential",
       "satelliteStatus": "verify",
       "satelliteNote": "",
-      "isNew": false
+      "isNew": false,
+      "notes": ""
     },
     {
       "id": "BLDR2508599",
@@ -615,7 +628,8 @@
       "parcelType": "Residential",
       "satelliteStatus": "verify",
       "satelliteNote": "",
-      "isNew": false
+      "isNew": false,
+      "notes": ""
     },
     {
       "id": "BLDR2600729",
@@ -690,7 +704,8 @@
       "parcelType": "Residential",
       "satelliteStatus": "verify",
       "satelliteNote": "",
-      "isNew": false
+      "isNew": false,
+      "notes": ""
     },
     {
       "id": "BLDR2601598",
@@ -951,7 +966,8 @@
       "leadNames": [
         "Aleisha Matlock"
       ],
-      "leadName": "Aleisha Matlock"
+      "leadName": "Aleisha Matlock",
+      "notes": ""
     },
     {
       "id": "BLDR2402712",
@@ -997,7 +1013,8 @@
       "leadNames": [
         "Schroder"
       ],
-      "leadName": "Schroder"
+      "leadName": "Schroder",
+      "notes": ""
     },
     {
       "id": "BLDR2502084",
@@ -1043,7 +1060,8 @@
       "leadNames": [
         "Toribio"
       ],
-      "leadName": "Toribio"
+      "leadName": "Toribio",
+      "notes": ""
     },
     {
       "id": "BLDR2400726",
@@ -1089,7 +1107,8 @@
       "leadNames": [
         "Francisco Javier Castillo Orantes"
       ],
-      "leadName": "Francisco Javier Castillo Orantes"
+      "leadName": "Francisco Javier Castillo Orantes",
+      "notes": ""
     },
     {
       "id": "BLDR2506027",
@@ -1136,7 +1155,8 @@
         "Manuel B Castillo",
         "Juan Juarez Valdez"
       ],
-      "leadName": "Manuel B Castillo & Juan Juarez Valdez"
+      "leadName": "Manuel B Castillo & Juan Juarez Valdez",
+      "notes": ""
     },
     {
       "id": "BLDR2504762",
@@ -1182,7 +1202,8 @@
       "leadNames": [
         "Heidi Howell"
       ],
-      "leadName": "Heidi Howell"
+      "leadName": "Heidi Howell",
+      "notes": ""
     },
     {
       "id": "BLDR2500463",
@@ -1228,7 +1249,8 @@
       "leadNames": [
         "Rodney Widiger"
       ],
-      "leadName": "Rodney Widiger"
+      "leadName": "Rodney Widiger",
+      "notes": ""
     },
     {
       "id": "BLDR2403419",
@@ -1275,7 +1297,8 @@
         "Martin Galavza Viramontes",
         "Graciel P Viramontes"
       ],
-      "leadName": "Martin Galavza & Graciel P Viramontes"
+      "leadName": "Martin Galavza & Graciel P Viramontes",
+      "notes": ""
     },
     {
       "id": "BLDR2503081",
@@ -1322,7 +1345,8 @@
         "Daian Gonzalez",
         "Guadalupe Meza"
       ],
-      "leadName": "Daian Gonzalez & Guadalupe Meza"
+      "leadName": "Daian Gonzalez & Guadalupe Meza",
+      "notes": ""
     },
     {
       "id": "BLDR2403126",
@@ -1462,7 +1486,8 @@
       "leadNames": [
         "Holt"
       ],
-      "leadName": "Holt"
+      "leadName": "Holt",
+      "notes": ""
     },
     {
       "id": "BLDR2506138",
@@ -1509,7 +1534,8 @@
         "Erick Lozano",
         "Andrea Lozano"
       ],
-      "leadName": "Erick & Andrea Lozano"
+      "leadName": "Erick & Andrea Lozano",
+      "notes": ""
     },
     {
       "id": "BLDR2505156",
@@ -1556,7 +1582,8 @@
         "Barbara Dyer",
         "Gary Dyer"
       ],
-      "leadName": "Barbara & Gary Dyer"
+      "leadName": "Barbara & Gary Dyer",
+      "notes": ""
     },
     {
       "id": "BLDR2400832",
@@ -1602,7 +1629,8 @@
       "leadNames": [
         "Jesse Sparks"
       ],
-      "leadName": "Jesse Sparks"
+      "leadName": "Jesse Sparks",
+      "notes": ""
     },
     {
       "id": "BLDR2405622",
@@ -1698,7 +1726,8 @@
       "leadNames": [
         "John Sherman"
       ],
-      "leadName": "John Sherman"
+      "leadName": "John Sherman",
+      "notes": ""
     },
     {
       "id": "BLDR2402651",
@@ -1793,7 +1822,8 @@
       "leadNames": [
         "Schroder"
       ],
-      "leadName": "Schroder"
+      "leadName": "Schroder",
+      "notes": ""
     },
     {
       "id": "BLDR2500644",
@@ -1840,7 +1870,8 @@
         "Benjamin Lamb",
         "Pamela Lamb"
       ],
-      "leadName": "Benjamin & Pamela Lamb"
+      "leadName": "Benjamin & Pamela Lamb",
+      "notes": ""
     },
     {
       "id": "BLDR2502698",
@@ -1888,7 +1919,8 @@
         "Marie Shannon",
         "Justin Allen Clifton"
       ],
-      "leadName": "Carol Lee Sawyer, Marie Shannon & Justin Allen Clifton"
+      "leadName": "Carol Lee Sawyer, Marie Shannon & Justin Allen Clifton",
+      "notes": ""
     },
     {
       "id": "BLDR2404930",
@@ -1935,7 +1967,8 @@
         "Jesus A Tavizon",
         "Lucia Tavizon"
       ],
-      "leadName": "Jesus A & Lucia Tavizon"
+      "leadName": "Jesus A & Lucia Tavizon",
+      "notes": ""
     },
     {
       "id": "BLDR2403440",
@@ -2076,7 +2109,8 @@
       "leadNames": [
         "Jose Quintana Luque"
       ],
-      "leadName": "Jose Quintana Luque"
+      "leadName": "Jose Quintana Luque",
+      "notes": ""
     },
     {
       "id": "BLDR2510070",
@@ -2122,7 +2156,8 @@
       "leadNames": [
         "Barkley-Boyle"
       ],
-      "leadName": "Barkley-Boyle"
+      "leadName": "Barkley-Boyle",
+      "notes": ""
     },
     {
       "id": "BLDR2508280",
@@ -2168,7 +2203,8 @@
       "leadNames": [
         "Marshall A Duwa"
       ],
-      "leadName": "Marshall A Duwa"
+      "leadName": "Marshall A Duwa",
+      "notes": ""
     },
     {
       "id": "BLDR2502115",
@@ -2215,7 +2251,8 @@
         "Juan Carlos Guerrero",
         "Myrna Guerrero"
       ],
-      "leadName": "Juan Carlos & Myrna Guerrero"
+      "leadName": "Juan Carlos & Myrna Guerrero",
+      "notes": ""
     },
     {
       "id": "BLDR2502716",
@@ -2262,7 +2299,8 @@
         "Cruz Alfonso Dominguez",
         "Abril M Dominguez"
       ],
-      "leadName": "Cruz Alfonso & Abril M Dominguez"
+      "leadName": "Cruz Alfonso & Abril M Dominguez",
+      "notes": ""
     },
     {
       "id": "BLDR2503908",
@@ -2309,7 +2347,8 @@
         "Amelia Nucamendi Suarez",
         "Diego Nucamendi Gumeta"
       ],
-      "leadName": "Amelia Nucamendi Suarez & Diego Nucamendi Gumeta"
+      "leadName": "Amelia Nucamendi Suarez & Diego Nucamendi Gumeta",
+      "notes": ""
     },
     {
       "id": "BLDR2602684",
@@ -2355,7 +2394,8 @@
       "leadNames": [
         "Anthony W Yannone"
       ],
-      "leadName": "Anthony W Yannone"
+      "leadName": "Anthony W Yannone",
+      "notes": ""
     },
     {
       "id": "BLDR2503249",
@@ -2401,7 +2441,8 @@
       "leadNames": [
         "Hayley Chapman"
       ],
-      "leadName": "Hayley Chapman"
+      "leadName": "Hayley Chapman",
+      "notes": ""
     },
     {
       "id": "BLDR2503626",
@@ -2448,7 +2489,8 @@
         "Daian Gonzalez",
         "Guadalupe Meza"
       ],
-      "leadName": "Daian Gonzalez & Guadalupe Meza"
+      "leadName": "Daian Gonzalez & Guadalupe Meza",
+      "notes": ""
     },
     {
       "id": "BLDR2402200",
@@ -2545,7 +2587,8 @@
         "Jesus M Olivas",
         "Georigina Payan"
       ],
-      "leadName": "Jesus M Olivas & Georigina Payan"
+      "leadName": "Jesus M Olivas & Georigina Payan",
+      "notes": ""
     },
     {
       "id": "BLDR2400891",
@@ -2591,7 +2634,8 @@
       "leadNames": [
         "Martin Galvan"
       ],
-      "leadName": "Martin Galvan"
+      "leadName": "Martin Galvan",
+      "notes": ""
     },
     {
       "id": "BLDR2401873",
@@ -2638,7 +2682,8 @@
         "Robert G Rurka",
         "Vicki A Rurka"
       ],
-      "leadName": "Robert G & Vicki A Rurka"
+      "leadName": "Robert G & Vicki A Rurka",
+      "notes": ""
     },
     {
       "id": "BLDR2400483",
@@ -2684,7 +2729,8 @@
       "leadNames": [
         "Vinnesa M Ramos"
       ],
-      "leadName": "Vinnesa M Ramos"
+      "leadName": "Vinnesa M Ramos",
+      "notes": ""
     },
     {
       "id": "BLDR2403374",
@@ -2730,7 +2776,8 @@
       "leadNames": [
         "Heather Spencer"
       ],
-      "leadName": "Heather Spencer"
+      "leadName": "Heather Spencer",
+      "notes": ""
     },
     {
       "id": "BLDR2604065",
@@ -2777,7 +2824,8 @@
         "Arturo Alfaro Tinajero",
         "Alfaro Brayan"
       ],
-      "leadName": "Arturo Alfaro Tinajero & Alfaro Brayan"
+      "leadName": "Arturo Alfaro Tinajero & Alfaro Brayan",
+      "notes": ""
     },
     {
       "id": "BLDR2604283",
@@ -2873,7 +2921,8 @@
       "leadNames": [
         "Timothy John Pennington"
       ],
-      "leadName": "Timothy John Pennington"
+      "leadName": "Timothy John Pennington",
+      "notes": ""
     },
     {
       "id": "BLDR2604442",
@@ -3065,7 +3114,8 @@
       ],
       "vesting": "SADEQ ANGHAM M/ALJBORI MAAYAD",
       "isTrust": false,
-      "isNew": true
+      "isNew": true,
+      "notes": ""
     },
     {
       "id": "BLDR2604855",
@@ -3112,7 +3162,8 @@
       ],
       "vesting": "KERR JUSTIN/CONNOR-KERR SARAH",
       "isTrust": false,
-      "isNew": true
+      "isNew": true,
+      "notes": ""
     },
     {
       "id": "BLDR2604856",
@@ -3159,7 +3210,8 @@
       ],
       "vesting": "HOOKER PHILLIP M/KATHY",
       "isTrust": false,
-      "isNew": true
+      "isNew": true,
+      "notes": ""
     },
     {
       "id": "BLDR2605241",
@@ -3255,7 +3307,9 @@
       "vesting": "DIVIZIO MICHAELEEN D",
       "isTrust": false,
       "isNew": true,
-      "notes": ""
+      "notes": "",
+      "outcome": "hassolar",
+      "outcomeDate": "2026-07-29T22:30:05.629Z"
     },
     {
       "id": "BLDR2605494",
@@ -3349,7 +3403,8 @@
       ],
       "vesting": "MAUPIN THOMAS A/CAITLIN M",
       "isTrust": false,
-      "isNew": true
+      "isNew": true,
+      "notes": ""
     },
     {
       "id": "BLDR2605499",
@@ -3395,7 +3450,8 @@
       ],
       "vesting": "ELISERIO FAMILY LIVING TRUST",
       "isTrust": true,
-      "isNew": true
+      "isNew": true,
+      "notes": ""
     },
     {
       "id": "BLDR2605713",
@@ -3496,6 +3552,6 @@
       "notes": ""
     }
   ],
-  "lastSync": "2026-07-28T22:05:52.363Z",
+  "lastSync": "2026-07-29T22:30:07.351Z",
   "territory": "Tonopah AZ"
 }
