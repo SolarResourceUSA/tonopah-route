@@ -1444,7 +1444,9 @@
         "Robert Eugene Fannin"
       ],
       "leadName": "Robert Eugene Fannin",
-      "notes": ""
+      "notes": "",
+      "outcome": "renter",
+      "outcomeDate": "2026-07-29T22:43:13.258Z"
     },
     {
       "id": "BLDR2500030",
@@ -3556,6 +3558,6 @@
       "notes": ""
     }
   ],
-  "lastSync": "2026-07-29T22:31:40.160Z",
+  "lastSync": "2026-07-29T22:43:14.256Z",
   "territory": "Tonopah AZ"
 }
