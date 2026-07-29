@@ -3511,7 +3511,9 @@
       "vesting": "MUNOZ BRYAN TORES/GARCIA KIMBERLY",
       "isTrust": false,
       "isNew": true,
-      "notes": ""
+      "notes": "",
+      "outcome": "apptset",
+      "outcomeDate": "2026-07-29T23:34:35.459Z"
     },
     {
       "id": "BLDR2605747",
@@ -3564,6 +3566,6 @@
       "notes": ""
     }
   ],
-  "lastSync": "2026-07-29T23:34:09.216Z",
+  "lastSync": "2026-07-29T23:34:36.344Z",
   "territory": "Tonopah AZ"
 }
