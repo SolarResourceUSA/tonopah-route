@@ -111,7 +111,9 @@
       "satelliteStatus": "verify",
       "satelliteNote": "",
       "isNew": false,
-      "notes": ""
+      "notes": "",
+      "outcome": "hassolar",
+      "outcomeDate": "2026-07-29T22:31:18.285Z"
     },
     {
       "id": "BLDR2600600",
@@ -3552,6 +3554,6 @@
       "notes": ""
     }
   ],
-  "lastSync": "2026-07-29T22:30:07.351Z",
+  "lastSync": "2026-07-29T22:31:19.017Z",
   "territory": "Tonopah AZ"
 }
