@@ -2069,7 +2069,9 @@
         "Penny Maupin"
       ],
       "leadName": "Steve & Penny Maupin",
-      "notes": ""
+      "notes": "",
+      "outcome": "hassolar",
+      "outcomeDate": "2026-07-29T23:20:05.416Z"
     },
     {
       "id": "BLDR2405751",
@@ -3560,6 +3562,6 @@
       "notes": ""
     }
   ],
-  "lastSync": "2026-07-29T23:18:50.782Z",
+  "lastSync": "2026-07-29T23:20:06.378Z",
   "territory": "Tonopah AZ"
 }
