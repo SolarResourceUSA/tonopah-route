@@ -3410,7 +3410,9 @@
       "vesting": "MAUPIN THOMAS A/CAITLIN M",
       "isTrust": false,
       "isNew": true,
-      "notes": ""
+      "notes": "",
+      "outcome": "hassolar",
+      "outcomeDate": "2026-07-29T23:18:49.743Z"
     },
     {
       "id": "BLDR2605499",
@@ -3558,6 +3560,6 @@
       "notes": ""
     }
   ],
-  "lastSync": "2026-07-29T22:43:14.256Z",
+  "lastSync": "2026-07-29T23:18:50.782Z",
   "territory": "Tonopah AZ"
 }
