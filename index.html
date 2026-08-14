@@ -172,6 +172,19 @@
     background: #1e2438; padding: 2px 6px; border-radius: 4px;
     font-size: 11px; color: #fbbf24;
   }
+
+/* ---- live GPS position (Blake's blue dot) ---- */
+.me-dot{width:18px;height:18px;border-radius:50%;background:#1a73e8;border:3px solid #fff;
+  box-shadow:0 0 0 1px rgba(0,0,0,.25),0 2px 6px rgba(0,0,0,.45);}
+.me-dot::after{content:'';position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;
+  border-radius:50%;background:rgba(26,115,232,.35);animation:mePulse 2s ease-out infinite;}
+@keyframes mePulse{0%{transform:scale(1);opacity:.7}100%{transform:scale(3.2);opacity:0}}
+.locate-btn{position:absolute;right:12px;bottom:96px;z-index:900;width:46px;height:46px;border-radius:50%;
+  border:none;background:#111827;color:#e5e7eb;font-size:21px;line-height:46px;text-align:center;
+  box-shadow:0 3px 10px rgba(0,0,0,.5);cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.locate-btn.following{background:#1a73e8;color:#fff;}
+.locate-btn.err{background:#7f1d1d;color:#fff;}
+
 </style>
 </head>
 <body>
@@ -206,6 +219,7 @@
 </div>
 
 <div id="map"></div>
+<button class="locate-btn" id="locateBtn" title="Show my location" onclick="toggleFollow()">◎</button>
 
 <!-- Detail sheet -->
 <div class="detail" id="detail">
@@ -2684,11 +2698,69 @@ function maybeRenderEmptyState() {
   }
 }
 
+
+/* ============================================================================
+   LIVE GPS — "where am I" blue dot for field use
+   Uses Leaflet's built-in locate(); no extra library. Requires HTTPS (Pages is).
+   ============================================================================ */
+let meMarker = null, meCircle = null, following = false, geoStarted = false;
+
+function setLocBtn(cls, glyph) {
+  const b = document.getElementById('locateBtn');
+  if (!b) return;
+  b.className = 'locate-btn' + (cls ? ' ' + cls : '');
+  if (glyph) b.textContent = glyph;
+}
+
+function startGeo() {
+  if (geoStarted) return;
+  geoStarted = true;
+  map.locate({ watch: true, enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
+}
+
+function toggleFollow() {
+  startGeo();
+  following = !following;
+  setLocBtn(following ? 'following' : '', '◎');
+  if (following && meMarker) map.setView(meMarker.getLatLng(), Math.max(map.getZoom(), 16), { animate: true });
+}
+
+function onLocation(e) {
+  const ll = e.latlng;
+  if (!meMarker) {
+    meMarker = L.marker(ll, {
+      icon: L.divIcon({ className: 'me-wrap', html: '<div class="me-dot"></div>', iconSize: [18, 18], iconAnchor: [9, 9] }),
+      zIndexOffset: 1000, interactive: false,
+    }).addTo(map);
+    meCircle = L.circle(ll, { radius: e.accuracy || 30, color: '#1a73e8', weight: 1, opacity: .5, fillColor: '#1a73e8', fillOpacity: .10, interactive: false }).addTo(map);
+  } else {
+    meMarker.setLatLng(ll);
+    meCircle.setLatLng(ll).setRadius(e.accuracy || 30);
+  }
+  if (following) map.setView(ll, Math.max(map.getZoom(), 16), { animate: true });
+}
+
+function onLocationError(err) {
+  console.warn('geolocation', err && err.message);
+  following = false;
+  setLocBtn('err', '⚠');
+  setTimeout(function () { setLocBtn('', '◎'); }, 4000);
+}
+
+function initGeo() {
+  map.on('locationfound', onLocation);
+  map.on('locationerror', onLocationError);
+  // A manual drag means he wants to browse — stop yanking the map back to him.
+  map.on('dragstart', function () { if (following) { following = false; setLocBtn('', '◎'); } });
+  startGeo();
+}
+
 /* ============================================================================
    BOOT
    ============================================================================ */
 (async function boot() {
   initMap();
+  initGeo();
   // Try local cache first for instant render, then reconcile with GitHub
   try {
     const local = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
