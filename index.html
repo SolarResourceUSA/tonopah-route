@@ -149,6 +149,8 @@
   .obtn.active.called   { background: #3b280d; color: #fbbf24; border-color: #7a5a1e; }
   .obtn.active.notmoved { background: #251a3b; color: #c4b5fd; border-color: #4a3a7a; }
   .obtn.active.soldu    { background: #0d3b2a; color: #6ee7b7; border-color: #2e6e58; }
+.obtn.active.goback   { background: #133a3f; color: #5eead4; border-color: #1f6b73; }
+.obtn.active.disq     { background: #2b2b2b; color: #9ca3af; border-color: #4b5563; }
 
   /* Update button */
   .update-btn {
@@ -279,6 +281,8 @@
     <button class="obtn" data-outcome="nih">NIH</button>
     <button class="obtn" data-outcome="called">Called Back</button>
     <button class="obtn" data-outcome="notmoved">Not Moved In</button>
+  <button class="obtn" data-outcome="goback">Go Back</button>
+  <button class="obtn" data-outcome="disq">Disqualified</button>
     <button class="obtn" data-outcome="soldu">SOLD 🎉</button>
   </div>
 
@@ -2173,9 +2177,9 @@ function mergePermits(seed, saved) {
 }
 
 /* ── Outcome exclusion rules (from PROJECT-DIRECTION.md) ── */
-const REMOVE_OUTCOMES = new Set(['apptset', 'notint', 'hassolar', 'renter', 'soldu']);
+const REMOVE_OUTCOMES = new Set(['apptset', 'notint', 'hassolar', 'renter', 'soldu', 'disq']);
 const SUPPRESS_30_DAYS = new Set(['notmoved']);
-// 'nih' / 'called' / blank → keep on route
+// 'nih' / 'called' / 'goback' / blank → keep on route ('goback' means return later)
 function isActiveRoute(p) {
   if (!p.outcome) return true;
   if (REMOVE_OUTCOMES.has(p.outcome)) return false;
