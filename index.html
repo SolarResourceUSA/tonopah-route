@@ -2722,7 +2722,7 @@ function toggleFollow() {
   startGeo();
   following = !following;
   setLocBtn(following ? 'following' : '', '◎');
-  if (following && meMarker) map.setView(meMarker.getLatLng(), Math.max(map.getZoom(), 16), { animate: true });
+  if (following && meMarker) map.setView(meMarker.getLatLng(), Math.max(map.getZoom(), 16), { animate: false });
 }
 
 function onLocation(e) {
@@ -2737,7 +2737,7 @@ function onLocation(e) {
     meMarker.setLatLng(ll);
     meCircle.setLatLng(ll).setRadius(e.accuracy || 30);
   }
-  if (following) map.setView(ll, Math.max(map.getZoom(), 16), { animate: true });
+  if (following) map.setView(ll, Math.max(map.getZoom(), 16), { animate: false });
 }
 
 function onLocationError(err) {
