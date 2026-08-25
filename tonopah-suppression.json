@@ -1,0 +1,114 @@
+{
+ "_comment": "PERMANENT disposition ledger recovered from git history 2026-08-25. Blake's app rewrites tonopah-permit-state.json with ONLY the permits currently in the seed, so a removed lead loses its disposition and can be resurrected by a later sweep. This file is append-only and is unioned with the state file at build time. Never delete an entry.",
+ "suppress": [
+  "BLDR2401787",
+  "BLDR2402200",
+  "BLDR2402651",
+  "BLDR2402806",
+  "BLDR2403126",
+  "BLDR2405622",
+  "BLDR2502801",
+  "BLDR2504155",
+  "BLDR2504762",
+  "BLDR2509583",
+  "BLDR2600280",
+  "BLDR2600729",
+  "BLDR2605431",
+  "BLDR2605498",
+  "BLDR2605939"
+ ],
+ "protect": [
+  "BLDR2604283",
+  "BLDR2604835",
+  "BLDR2604855",
+  "BLDR2605241",
+  "BLDR2605713",
+  "BLDR2605747"
+ ],
+ "outcomes": {
+  "BLDR2401787": {
+   "outcome": "hassolar",
+   "date": "2026-07-29T23:20:05.416Z"
+  },
+  "BLDR2402200": {
+   "outcome": "notint",
+   "date": "2026-07-28T21:59:08.939Z"
+  },
+  "BLDR2402651": {
+   "outcome": "hassolar",
+   "date": "2026-07-28T22:02:40.697Z"
+  },
+  "BLDR2402806": {
+   "outcome": "renter",
+   "date": "2026-07-29T22:43:13.258Z"
+  },
+  "BLDR2403126": {
+   "outcome": "hassolar",
+   "date": "2026-07-29T22:31:39.125Z"
+  },
+  "BLDR2405622": {
+   "outcome": "hassolar",
+   "date": "2026-07-28T22:02:21.419Z"
+  },
+  "BLDR2502801": {
+   "outcome": "hassolar",
+   "date": "2026-07-28T22:00:53.919Z"
+  },
+  "BLDR2504155": {
+   "outcome": "hassolar",
+   "date": "2026-07-28T22:01:52.118Z"
+  },
+  "BLDR2504762": {
+   "outcome": "hassolar",
+   "date": "2026-08-14T22:05:48.453Z"
+  },
+  "BLDR2509583": {
+   "outcome": "hassolar",
+   "date": "2026-07-29T22:31:18.285Z"
+  },
+  "BLDR2600280": {
+   "outcome": "hassolar",
+   "date": "2026-07-28T21:58:25.936Z"
+  },
+  "BLDR2600729": {
+   "outcome": "hassolar",
+   "date": "2026-07-28T21:58:49.831Z"
+  },
+  "BLDR2604283": {
+   "outcome": "soldu",
+   "date": "2026-07-28T22:02:56.922Z"
+  },
+  "BLDR2604835": {
+   "outcome": "soldu",
+   "date": "2026-07-28T21:57:46.483Z"
+  },
+  "BLDR2604855": {
+   "outcome": "soldu",
+   "date": "2026-07-29T23:34:08.368Z"
+  },
+  "BLDR2605241": {
+   "outcome": "soldu",
+   "date": "2026-07-28T22:05:51.130Z"
+  },
+  "BLDR2605431": {
+   "outcome": "hassolar",
+   "date": "2026-07-29T22:30:05.629Z"
+  },
+  "BLDR2605498": {
+   "outcome": "hassolar",
+   "date": "2026-07-29T23:18:49.743Z"
+  },
+  "BLDR2605713": {
+   "outcome": "apptset",
+   "date": "2026-07-29T23:34:35.459Z"
+  },
+  "BLDR2605747": {
+   "outcome": "soldu",
+   "date": "2026-07-28T21:57:34.927Z"
+  },
+  "BLDR2605939": {
+   "outcome": "hassolar",
+   "date": "2026-08-14T20:27:00.801Z"
+  }
+ }
+}
