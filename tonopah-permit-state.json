@@ -1785,7 +1785,10 @@
       "contractor": "Not on PND report — SolarAPP+ permits bypass the weekly county report",
       "contractorPhone": null,
       "contractorEmail": null,
-      "licenseROC": null
+      "licenseROC": null,
+      "outcome": "soldu",
+      "outcomeDate": "2026-08-26T01:38:16.325Z",
+      "notes": ""
     },
     {
       "id": "SA2600020",
@@ -1827,7 +1830,8 @@
       "contractor": "Not on PND report — SolarAPP+ permits bypass the weekly county report",
       "contractorPhone": null,
       "contractorEmail": null,
-      "licenseROC": null
+      "licenseROC": null,
+      "notes": ""
     },
     {
       "id": "BLDR2606471",
@@ -1869,9 +1873,10 @@
       "contractor": "Not issued — no contractor on public record",
       "contractorPhone": null,
       "contractorEmail": null,
-      "licenseROC": null
+      "licenseROC": null,
+      "notes": ""
     }
   ],
-  "lastSync": "2026-08-26T01:37:47.590Z",
+  "lastSync": "2026-08-26T01:38:17.325Z",
   "territory": "Tonopah AZ"
 }
