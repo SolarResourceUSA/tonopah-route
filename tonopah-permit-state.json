@@ -268,7 +268,10 @@
         "Manuel B Castillo",
         "Juan Juarez Valdez"
       ],
-      "leadName": "Manuel B Castillo & Juan Juarez Valdez"
+      "leadName": "Manuel B Castillo & Juan Juarez Valdez",
+      "outcome": "notint",
+      "outcomeDate": "2026-09-01T23:05:23.566Z",
+      "notes": ""
     },
     {
       "id": "BLDR2500644",
@@ -1925,6 +1928,6 @@
       "notes": ""
     }
   ],
-  "lastSync": "2026-09-01T23:02:14.500Z",
+  "lastSync": "2026-09-01T23:05:24.370Z",
   "territory": "Tonopah AZ"
 }
