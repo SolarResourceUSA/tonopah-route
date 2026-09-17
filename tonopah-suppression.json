@@ -1,6 +1,7 @@
 {
  "_comment": "PERMANENT disposition ledger recovered from git history 2026-08-25. Blake's app rewrites tonopah-permit-state.json with ONLY the permits currently in the seed, so a removed lead loses its disposition and can be resurrected by a later sweep. This file is append-only and is unioned with the state file at build time. Never delete an entry.",
  "suppress": [
+  "B202405693",
   "BLDR2401787",
   "BLDR2402200",
   "BLDR2402651",
@@ -10,6 +11,7 @@
   "BLDR2502801",
   "BLDR2504155",
   "BLDR2504762",
+  "BLDR2506027",
   "BLDR2509583",
   "BLDR2600280",
   "BLDR2600729",
@@ -28,6 +30,10 @@
   "SA2600019"
  ],
  "outcomes": {
+  "B202405693": {
+   "outcome": "hassolar",
+   "date": "2026-09-01T23:02:12.769Z"
+  },
   "BLDR2401787": {
    "outcome": "hassolar",
    "date": "2026-07-29T23:20:05.416Z"
@@ -63,6 +69,10 @@
   "BLDR2504762": {
    "outcome": "hassolar",
    "date": "2026-08-14T22:05:48.453Z"
+  },
+  "BLDR2506027": {
+   "outcome": "notint",
+   "date": "2026-09-01T23:05:23.566Z"
   },
   "BLDR2509583": {
    "outcome": "hassolar",
