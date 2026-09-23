@@ -2504,11 +2504,10 @@ let map;
 function initMap() {
   map = L.map('map', { zoomControl: true }).setView(TERRITORY.center, TERRITORY.zoom);
   // Light, Apple-Maps-style tile layer (CartoDB Voyager)
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 20,
-    attribution: '© OpenStreetMap © CARTO',
-    subdomains: 'abcd',
-  }).addTo(map);
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map);
 }
 
 function makePinIcon(bucket) {
